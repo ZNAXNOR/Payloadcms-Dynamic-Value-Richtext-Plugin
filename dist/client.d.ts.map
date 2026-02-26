@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "client.d.ts",
+  "sourceRoot": "",
+  "sources": [
+    "../src/client.ts"
+  ],
+  "names": [],
+  "mappings": "AAAA,OAAO,EAAE,yBAAyB,EAAE,MAAM,2CAA2C,CAAC"
+}

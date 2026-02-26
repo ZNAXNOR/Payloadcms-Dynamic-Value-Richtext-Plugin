@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "feature.server.d.ts",
+  "sourceRoot": "",
+  "sources": [
+    "../../../src/features/DynamicValue/feature.server.ts"
+  ],
+  "names": [],
+  "mappings": "AAEA,OAAO,KAAK,EAAE,kBAAkB,EAAE,kBAAkB,EAAE,MAAM,YAAY,CAAC;AAEzE,eAAO,MAAM,mBAAmB;aAGnB,kBAAkB,EAAE;EAiD/B,CAAC"
+}
