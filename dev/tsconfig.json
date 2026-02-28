@@ -16,20 +16,12 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@payload-config": [
-        "./payload.config.ts"
-      ],
-      "payloadcms-dynamic-value-richtext": [
-        "../src/index.ts"
-      ],
-      "payloadcms-dynamic-value-richtext/client": [
-        "../src/exports/client.ts"
-      ],
-      "payloadcms-dynamic-value-richtext/rsc": [
-        "../src/exports/rsc.ts"
-      ]
+      "@payload-config": ["./payload.config.ts"],
+      "@od-labs/payloadcms-dynamic-value-richtext": ["../src/index.ts"],
+      "@od-labs/payloadcms-dynamic-value-richtext/client": ["../src/exports/client.ts"],
+      "@od-labs/payloadcms-dynamic-value-richtext/rsc": ["../src/exports/rsc.ts"]
     },
     "noEmit": true,
-    "emitDeclarationOnly": false,
+    "emitDeclarationOnly": false
   }
 }

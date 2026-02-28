@@ -14,9 +14,9 @@ A powerful [Payload CMS](https://payloadcms.com) plugin for the Lexical editor t
 ## Installation
 
 ```bash
-pnpm add payloadcms-dynamic-value-richtext
+pnpm add @od-labs/payloadcms-dynamic-value-richtext
 # or
-npm install payloadcms-dynamic-value-richtext
+npm install @od-labs/payloadcms-dynamic-value-richtext
 ```
 
 ## Basic Setup
@@ -25,7 +25,7 @@ Add the plugin to your `payload.config.ts`:
 
 ```typescript
 import { buildConfig } from 'payload'
-import { dynamicValuePlugin } from 'payloadcms-dynamic-value-richtext'
+import { dynamicValuePlugin } from '@od-labs/payloadcms-dynamic-value-richtext'
 
 export default buildConfig({
   plugins: [
@@ -44,7 +44,7 @@ export default buildConfig({
 In your Lexical editor configuration, add the `DynamicValueFeature` to your list of features:
 
 ```typescript
-import { DynamicValueFeature } from 'payloadcms-dynamic-value-richtext'
+import { DynamicValueFeature } from '@od-labs/payloadcms-dynamic-value-richtext'
 
 // In your collection/global field definition:
 {

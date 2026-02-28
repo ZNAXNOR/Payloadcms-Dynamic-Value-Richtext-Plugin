@@ -1,28 +1,18 @@
-import {
-  DecoratorNode,
-  type DOMConversionMap,
-  type DOMConversionOutput,
-  type DOMExportOutput,
-  type LexicalNode,
-  type NodeKey,
-  type SerializedLexicalNode,
-  type Spread,
-} from '@payloadcms/richtext-lexical/lexical'
+import type { SerializedLexicalNode } from '@payloadcms/richtext-lexical/lexical'
+
+import { $applyNodeReplacement, DecoratorNode } from '@payloadcms/richtext-lexical/lexical'
 import React from 'react'
 
-export type SerializedDynamicValueNode = Spread<
-  {
-    field: string
-    label?: string
-  },
-  SerializedLexicalNode
->
+export type SerializedDynamicValueNode = {
+  field: string
+  label: string
+} & SerializedLexicalNode
 
 export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
   __field: string
   __label: string
 
-  constructor(field: string, label?: string, key?: NodeKey) {
+  constructor(field: string, label?: string, key?: string) {
     super(key)
     this.__field = field
     this.__label = label ?? field
@@ -36,22 +26,26 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
     return 'dynamic-value'
   }
 
-  static importDOM(): DOMConversionMap | null {
+  static importDOM() {
     return {
-      span: (domNode: HTMLElement) => {
+      span: (domNode: HTMLSpanElement) => {
         if (!domNode.hasAttribute('data-payload-dynamic-value')) {
           return null
         }
         return {
-          conversion: (domNode: HTMLElement): DOMConversionOutput => {
+          conversion: (domNode: HTMLSpanElement) => {
             const field = domNode.getAttribute('data-payload-dynamic-field')
             const label = domNode.textContent || undefined
             if (field) {
-              return { node: $createDynamicValueNode(field, label) }
+              return {
+                node: $createDynamicValueNode(field, label),
+              }
             }
-            return { node: null }
+            return {
+              node: null,
+            }
           },
-          priority: 1,
+          priority: 1 as const,
         }
       },
     }
@@ -69,6 +63,7 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
   }
 
   decorate(): React.ReactNode {
+    console.log('[DynamicValueNode] Decorating:', this.__field)
     return (
       <span
         contentEditable={false}
@@ -105,12 +100,14 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
     )
   }
 
-  exportDOM(): DOMExportOutput {
+  exportDOM() {
     const element = document.createElement('span')
     element.setAttribute('data-payload-dynamic-value', 'true')
     element.setAttribute('data-payload-dynamic-field', this.__field)
     element.textContent = this.__label
-    return { element }
+    return {
+      element,
+    }
   }
 
   exportJSON(): SerializedDynamicValueNode {
@@ -144,11 +141,9 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
 }
 
 export function $createDynamicValueNode(field: string, label?: string): DynamicValueNode {
-  return new DynamicValueNode(field, label)
+  return $applyNodeReplacement(new DynamicValueNode(field, label))
 }
 
-export function $isDynamicValueNode(
-  node: LexicalNode | null | undefined,
-): node is DynamicValueNode {
-  return node?.getType() === 'dynamic-value'
+export function $isDynamicValueNode(node: any): node is DynamicValueNode {
+  return node?.getType?.() === 'dynamic-value'
 }

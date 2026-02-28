@@ -1,4 +1,3 @@
-import type { Config } from 'payload';
-import type { DynamicValueConfig } from './features/DynamicValue/types.js';
-export type { DynamicValueConfig, DynamicValueOption } from './features/DynamicValue/types.js';
-export declare const dynamicValuePlugin: (pluginOptions: DynamicValueConfig) => (config: Config) => Config;
+export { DynamicValueFeature } from './features/DynamicValue/feature.server.js';
+export { DynamicValueNode } from './nodes/DynamicValueNode/index.js';
+export declare const dynamicValuePlugin: (pluginOptions: any) => (config: any) => any;

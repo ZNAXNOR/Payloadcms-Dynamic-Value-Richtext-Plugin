@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { DecoratorNode } from '@payloadcms/richtext-lexical/lexical';
+import { $applyNodeReplacement, DecoratorNode } from '@payloadcms/richtext-lexical/lexical';
 import React from 'react';
 export class DynamicValueNode extends DecoratorNode {
     __field;
@@ -49,6 +49,7 @@ export class DynamicValueNode extends DecoratorNode {
         return span;
     }
     decorate() {
+        console.log('[DynamicValueNode] Decorating:', this.__field);
         return /*#__PURE__*/ _jsxs("span", {
             contentEditable: false,
             style: {
@@ -116,10 +117,10 @@ export class DynamicValueNode extends DecoratorNode {
     }
 }
 export function $createDynamicValueNode(field, label) {
-    return new DynamicValueNode(field, label);
+    return $applyNodeReplacement(new DynamicValueNode(field, label));
 }
 export function $isDynamicValueNode(node) {
-    return node?.getType() === 'dynamic-value';
+    return node?.getType?.() === 'dynamic-value';
 }
 
 //# sourceMappingURL=index.js.map

@@ -1,20 +1,32 @@
-import { DecoratorNode, type DOMConversionMap, type DOMExportOutput, type LexicalNode, type NodeKey, type SerializedLexicalNode, type Spread } from '@payloadcms/richtext-lexical/lexical';
+import type { SerializedLexicalNode } from '@payloadcms/richtext-lexical/lexical';
+import { DecoratorNode } from '@payloadcms/richtext-lexical/lexical';
 import React from 'react';
-export type SerializedDynamicValueNode = Spread<{
+export type SerializedDynamicValueNode = {
     field: string;
-    label?: string;
-}, SerializedLexicalNode>;
+    label: string;
+} & SerializedLexicalNode;
 export declare class DynamicValueNode extends DecoratorNode<React.ReactNode> {
     __field: string;
     __label: string;
-    constructor(field: string, label?: string, key?: NodeKey);
+    constructor(field: string, label?: string, key?: string);
     static clone(node: DynamicValueNode): DynamicValueNode;
     static getType(): string;
-    static importDOM(): DOMConversionMap | null;
+    static importDOM(): {
+        span: (domNode: HTMLSpanElement) => {
+            conversion: (domNode: HTMLSpanElement) => {
+                node: DynamicValueNode;
+            } | {
+                node: null;
+            };
+            priority: 1;
+        } | null;
+    };
     static importJSON(serializedNode: SerializedDynamicValueNode): DynamicValueNode;
     createDOM(): HTMLElement;
     decorate(): React.ReactNode;
-    exportDOM(): DOMExportOutput;
+    exportDOM(): {
+        element: HTMLSpanElement;
+    };
     exportJSON(): SerializedDynamicValueNode;
     getField(): string;
     getTextContent(): string;
@@ -23,4 +35,4 @@ export declare class DynamicValueNode extends DecoratorNode<React.ReactNode> {
     updateDOM(): boolean;
 }
 export declare function $createDynamicValueNode(field: string, label?: string): DynamicValueNode;
-export declare function $isDynamicValueNode(node: LexicalNode | null | undefined): node is DynamicValueNode;
+export declare function $isDynamicValueNode(node: any): node is DynamicValueNode;

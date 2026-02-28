@@ -3,10 +3,11 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { MongoMemoryReplSet } from 'mongodb-memory-server'
 import path from 'path'
 import { buildConfig } from 'payload'
-import { dynamicValuePlugin } from 'payloadcms-dynamic-value-richtext'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
+import { DynamicValueFeature } from '../src/features/DynamicValue/feature.server.js'
+import { dynamicValuePlugin } from '../src/index.js'
 import { testEmailAdapter } from './helpers/testEmailAdapter.js'
 import { seed } from './seed.js'
 
@@ -32,7 +33,7 @@ const buildConfigWithMemoryDB = async () => {
   return buildConfig({
     admin: {
       importMap: {
-        baseDir: path.resolve(dirname),
+        baseDir: path.resolve(dirname, '..'),
       },
     },
     collections: [
@@ -52,7 +53,16 @@ const buildConfigWithMemoryDB = async () => {
       ensureIndexes: true,
       url: process.env.DATABASE_URL || '',
     }),
-    editor: lexicalEditor(),
+    editor: lexicalEditor({
+      features: ({ defaultFeatures }) => {
+        return [
+          ...defaultFeatures,
+          DynamicValueFeature({
+            collections: ['posts'],
+          }),
+        ]
+      },
+    }),
     email: testEmailAdapter,
     onInit: async (payload) => {
       await seed(payload)
@@ -65,7 +75,7 @@ const buildConfigWithMemoryDB = async () => {
       }),
     ],
     secret: process.env.PAYLOAD_SECRET || 'test-secret_key',
-    sharp,
+    sharp: sharp as any,
     typescript: {
       outputFile: path.resolve(dirname, 'payload-types.ts'),
     },

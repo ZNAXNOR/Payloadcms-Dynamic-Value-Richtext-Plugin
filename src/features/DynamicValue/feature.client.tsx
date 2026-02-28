@@ -1,15 +1,27 @@
 'use client'
+
+console.log('[DynamicValueFeature] feature.client.tsx loaded')
+
 import { createClientFeature } from '@payloadcms/richtext-lexical/client'
-import { $insertNodes } from '@payloadcms/richtext-lexical/lexical'
+import {
+  $createTextNode,
+  $insertNodes,
+  type LexicalNode,
+} from '@payloadcms/richtext-lexical/lexical'
 import { useLexicalComposerContext } from '@payloadcms/richtext-lexical/lexical/react/LexicalComposerContext'
 import { LexicalTypeaheadMenuPlugin } from '@payloadcms/richtext-lexical/lexical/react/LexicalTypeaheadMenuPlugin'
+import { useForm } from '@payloadcms/ui'
 import { AtSign, Hash, Variable } from 'lucide-react'
 import React, { useCallback, useMemo, useState } from 'react'
 import * as ReactDOM from 'react-dom'
 
-import type { DynamicValueOption } from './types.js'
-
 import { $createDynamicValueNode, DynamicValueNode } from '../../nodes/DynamicValueNode/index.js'
+
+export function $isDynamicValueNode(
+  node: LexicalNode | null | undefined,
+): node is DynamicValueNode {
+  return node?.getType?.() === 'dynamic-value'
+}
 
 function useTriggerMatch(trigger: string) {
   return useCallback(
@@ -39,40 +51,65 @@ function useTriggerMatch(trigger: string) {
   )
 }
 
-const DynamicValuePlugin: React.FC<{
-  anchorElem?: HTMLElement
-  options: DynamicValueOption[]
-  trigger: string
-}> = ({ anchorElem, options: allOptions, trigger }) => {
-  const [editor] = useLexicalComposerContext()
-  const [queryString, setQueryString] = useState<null | string>(null)
+const SelectIcon = (trigger: string) => {
+  const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable
+  return () => (
+    <div
+      style={{
+        alignItems: 'center',
+        display: 'flex',
+        height: '20px',
+        justifyContent: 'center',
+        width: '20px',
+      }}
+    >
+      <IconToUse className="icon" size={16} style={{ color: 'currentColor' }} />
+    </div>
+  )
+}
 
+const DynamicValuePlugin = ({
+  anchorElem,
+  options: allOptions,
+  trigger,
+}: {
+  anchorElem?: HTMLElement
+  options: any[]
+  trigger: string
+}) => {
+  const [editor] = useLexicalComposerContext()
+  const { fields } = useForm()
+  const [queryString, setQueryString] = useState<null | string>(null)
   const checkForTriggerMatch = useTriggerMatch(trigger)
 
   const options = useMemo(() => {
     const searchString = queryString?.toLowerCase() || ''
     return (allOptions || [])
-      .filter(
-        (option: DynamicValueOption) =>
-          option.label.toLowerCase().includes(searchString) ||
-          option.value.toLowerCase().includes(searchString),
-      )
-      .map((opt: DynamicValueOption) => ({
+      .filter((option) => {
+        const val = fields[option.value]?.value
+        const hasValue = val !== undefined && val !== null && val !== ''
+        return (
+          hasValue &&
+          (option.label.toLowerCase().includes(searchString) ||
+            option.value.toLowerCase().includes(searchString))
+        )
+      })
+      .map((opt) => ({
         ...opt,
         key: opt.value,
       }))
-  }, [queryString, allOptions])
-
-  const TypeaheadMenu = LexicalTypeaheadMenuPlugin as any
+  }, [queryString, allOptions, fields])
 
   const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable
 
   return (
-    <TypeaheadMenu
-      anchorElem={anchorElem || (typeof document !== 'undefined' ? document.body : undefined)}
+    <LexicalTypeaheadMenuPlugin
+      {...({
+        anchorElem: anchorElem || (typeof document !== 'undefined' ? document.body : undefined),
+      } as any)}
       menuRenderFn={(
-        anchorElementRef: any,
-        { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex }: any,
+        anchorElementRef,
+        { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
       ) => {
         const anchor =
           anchorElementRef?.current ||
@@ -139,7 +176,11 @@ const DynamicValuePlugin: React.FC<{
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontSize: '13px', fontWeight: 500 }}>{option.label}</span>
                       <span
-                        style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', opacity: 0.5 }}
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '11px',
+                          opacity: 0.5,
+                        }}
                       >
                         {option.value}
                       </span>
@@ -153,29 +194,112 @@ const DynamicValuePlugin: React.FC<{
         )
       }}
       onQueryChange={setQueryString}
-      onSelectOption={(option: any, textNodeToReplace: any, closeMenu: any) => {
+      onSelectOption={(option: any, textNodeToReplace, closeMenu) => {
         editor.update(() => {
           if (textNodeToReplace) {
             textNodeToReplace.remove()
           }
           const node = $createDynamicValueNode(option.value, option.label)
-          $insertNodes([node])
+          $insertNodes([node, $createTextNode(' ')])
           closeMenu()
         })
       }}
-      options={options}
-      triggerFn={checkForTriggerMatch}
+      options={options as any}
+      triggerFn={checkForTriggerMatch as any}
     />
   )
 }
 
-export const DynamicValueFeatureClient = createClientFeature<
-  { options: DynamicValueOption[]; trigger: string },
-  { options: DynamicValueOption[]; trigger: string }
->(({ props }) => {
+const DropdownItemComponent = ({ editor, field, item, trigger }: any) => {
+  const { fields } = useForm()
+  const val = fields[field.value]?.value
+  const hasValue = val !== undefined && val !== null && val !== ''
+
+  if (!hasValue) {
+    return null
+  }
+
+  const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable
+
+  return (
+    <button
+      onClick={(e) => {
+        e.preventDefault()
+        item.onSelect({ editor, isActive: false })
+      }}
+      style={{
+        alignItems: 'center',
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '6px',
+        color: 'var(--theme-text)',
+        cursor: 'pointer',
+        display: 'flex',
+        gap: '10px',
+        padding: '8px 12px',
+        textAlign: 'left',
+        transition: 'all 0.15s ease',
+        whiteSpace: 'nowrap',
+        width: '100%',
+      }}
+      type="button"
+    >
+      <IconToUse size={14} style={{ opacity: 0.4 }} />
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.2' }}>{field.label}</span>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
+            lineHeight: '1.2',
+            opacity: 0.5,
+          }}
+        >
+          {field.value}
+        </span>
+      </div>
+    </button>
+  )
+}
+
+export const DynamicValueFeatureClient = createClientFeature((args: any) => {
+  console.log('[DynamicValueFeature] Initializing Client Feature', {
+    args,
+    nodesFound: Boolean(DynamicValueNode),
+  })
+  const props = args?.clientFeatureProps || args?.props || {}
   const options = props?.options || []
   const trigger = props?.trigger || '@'
-  const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable
+
+  const groupItems = options.map((field: any) => ({
+    Component: ({ editor, item }: any) => (
+      <DropdownItemComponent editor={editor} field={field} item={item} trigger={trigger} />
+    ),
+    isActive: () => false,
+    isEnabled: () => true,
+    key: `dv-item-${field.value}`,
+    label: field.label,
+    onSelect: ({ editor }: any) => {
+      console.log('[DynamicValueFeature] Toolbar Select:', field.value)
+      editor.update(() => {
+        try {
+          const node = $createDynamicValueNode(field.value, field.label)
+          $insertNodes([node, $createTextNode(' ')])
+        } catch (e) {
+          console.error('[DynamicValueFeature] Insertion failed:', e)
+        }
+      })
+    },
+    order: 1,
+  }))
+
+  const toolbarGroup = {
+    type: 'dropdown' as const,
+    ChildComponent: SelectIcon(trigger),
+    items: groupItems,
+    key: 'dynamic-value-toolbar-group', // Unique key to avoid Link feature collision
+    order: 10,
+  }
 
   return {
     nodes: [DynamicValueNode],
@@ -189,28 +313,7 @@ export const DynamicValueFeatureClient = createClientFeature<
     ],
     sanitizedClientFeatureProps: props,
     toolbarFixed: {
-      groups: [
-        {
-          type: 'dropdown',
-          ChildComponent: () => (
-            <div style={{ alignItems: 'center', display: 'flex', gap: '4px' }}>
-              <IconToUse size={14} style={{ color: 'var(--theme-text)', opacity: 0.7 }} />
-            </div>
-          ),
-          items: options.map((field: DynamicValueOption) => ({
-            key: field.value,
-            label: field.label,
-            onSelect: ({ editor }: { editor: any }) => {
-              editor.update(() => {
-                const node = $createDynamicValueNode(field.value, field.label)
-                $insertNodes([node])
-              })
-            },
-          })),
-          key: 'dynamicValue',
-          order: 99,
-        },
-      ],
+      groups: [toolbarGroup],
     },
   }
 })

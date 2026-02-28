@@ -1,83 +1,142 @@
-import type { CollectionSlug, Field, GlobalSlug } from 'payload'
+import type { Field } from 'payload'
 
 import { createNode, createServerFeature } from '@payloadcms/richtext-lexical'
 
-import type { DynamicValueConfig, DynamicValueOption } from './types.js'
-
 import { DynamicValueNode } from '../../nodes/DynamicValueNode/index.js'
 
-export const DynamicValueFeature = createServerFeature<
-  DynamicValueConfig,
-  object,
-  { options: DynamicValueOption[]; trigger: string }
->({
-  feature: ({ config: payloadConfig, props }) => {
-    const options: DynamicValueOption[] = []
-    const trigger = props?.trigger || '@'
+export type DynamicValueFeatureProps = {
+  collections?: string[]
+  fields?: Field[]
+  globals?: string[]
+  trigger?: string
+}
 
-    const flattenFields = (fields: Field[], prefix = '') => {
+export const DynamicValueFeature = createServerFeature<
+  DynamicValueFeatureProps,
+  DynamicValueFeatureProps,
+  any
+>({
+  feature: ({ config: payloadConfig, props: featureProps }) => {
+    const pluginOptions = payloadConfig.custom?.dynamicValue || {}
+    const props = { ...pluginOptions, ...(featureProps || {}) }
+    const options: { label: string; value: string }[] = []
+    const trigger = props?.trigger || '@'
+    console.log('[DynamicValueFeature] Options:', options.length)
+    console.log('[DynamicValueFeature] Trigger:', trigger)
+
+    const flattenFields = (fields: any[], prefix = '') => {
+      if (!Array.isArray(fields)) {
+        console.log(`[DynamicValueFeature] fields is not an array:`, typeof fields)
+        return
+      }
+
+      console.log(
+        `[DynamicValueFeature] Flattening ${fields.length} fields with prefix "${prefix}"`,
+      )
+
       fields.forEach((field) => {
-        if ('name' in field && field.name && field.type !== 'array' && field.type !== 'blocks') {
-          const name = prefix ? `${prefix}.${field.name}` : field.name
+        const isNested = 'name' in field && field.name
+        const newPrefix = isNested
+          ? prefix
+            ? `${prefix}.${field.name}`
+            : (field.name as string)
+          : prefix
+
+        console.log(
+          `[DynamicValueFeature] Processing field: ${field.name} (${field.type}) -> prefix: ${newPrefix}`,
+        )
+
+        if (isNested && !['array', 'blocks', 'richText', 'ui', 'upload'].includes(field.type)) {
+          const label = typeof field.label === 'string' ? field.label : (field.name as string)
+          console.log(`[DynamicValueFeature] Adding option: ${label} = ${newPrefix}`)
           options.push({
-            label: (field.label as string) || field.name,
-            value: name,
+            label,
+            value: newPrefix,
           })
         }
 
-        if ('fields' in field && field.fields && Array.isArray(field.fields)) {
-          flattenFields(
-            field.fields,
-            'name' in field && field.name
-              ? prefix
-                ? `${prefix}.${field.name}`
-                : field.name
-              : prefix,
-          )
+        if ('fields' in field && Array.isArray(field.fields)) {
+          flattenFields(field.fields, newPrefix)
         }
 
-        if (field.type === 'tabs' && field.tabs) {
-          field.tabs.forEach((tab) => {
-            flattenFields(tab.fields, prefix)
+        if (field.type === 'tabs' && Array.isArray(field.tabs)) {
+          field.tabs.forEach((tab: any) => {
+            if (tab.fields) {
+              flattenFields(tab.fields, prefix)
+            }
           })
         }
       })
     }
 
-    // 1. Process directly provided fields
     if (props?.fields) {
+      console.log('[DynamicValueFeature] Processing props.fields')
       flattenFields(props.fields)
     }
 
-    // 2. Process collections
     if (props?.collections && payloadConfig.collections) {
-      props.collections.forEach((slug: CollectionSlug) => {
+      const collectionSlugs = Array.isArray(props.collections)
+        ? props.collections
+        : Object.entries(props.collections)
+            .filter(([_, enabled]) => enabled)
+            .map(([slug]) => slug)
+
+      console.log('[DynamicValueFeature] Processing collections:', collectionSlugs)
+
+      collectionSlugs.forEach((slug: string) => {
         const collection = payloadConfig.collections?.find((c) => c.slug === slug)
         if (collection) {
+          console.log(`[DynamicValueFeature] Found collection: ${slug}, flattening fields`)
           flattenFields(collection.fields, slug)
+        } else {
+          console.log(`[DynamicValueFeature] Collection not found: ${slug}`)
         }
       })
     }
 
-    // 3. Process globals
     if (props?.globals && payloadConfig.globals) {
-      props.globals.forEach((slug: GlobalSlug) => {
+      const globalSlugs = Array.isArray(props.globals)
+        ? props.globals
+        : Object.entries(props.globals)
+            .filter(([_, enabled]) => enabled)
+            .map(([slug]) => slug)
+
+      console.log('[DynamicValueFeature] Processing globals:', globalSlugs)
+
+      globalSlugs.forEach((slug: string) => {
         const global = payloadConfig.globals?.find((g) => g.slug === slug)
         if (global) {
+          console.log(`[DynamicValueFeature] Found global: ${slug}, flattening fields`)
           flattenFields(global.fields, slug)
+        } else {
+          console.log(`[DynamicValueFeature] Global not found: ${slug}`)
         }
       })
     }
 
     return {
-      ClientFeature: 'payloadcms-dynamic-value-richtext/client#DynamicValueFeatureClient',
-      clientProps: {
+      ClientFeature: '@od-labs/payloadcms-dynamic-value-richtext/client#DynamicValueFeatureClient',
+      clientFeatureProps: {
         options,
         trigger,
       },
       key: 'dynamicValue',
       nodes: [
         createNode({
+          converters: {
+            html: {
+              converter: ({ node }: any) => {
+                return `<span data-payload-dynamic-value="true" data-payload-dynamic-field="${node.field}">${node.label}</span>`
+              },
+              nodeTypes: ['dynamic-value'],
+            },
+            text: {
+              converter: ({ node }: any) => {
+                return node.label
+              },
+              nodeTypes: ['dynamic-value'],
+            },
+          } as any,
           node: DynamicValueNode,
         }),
       ],

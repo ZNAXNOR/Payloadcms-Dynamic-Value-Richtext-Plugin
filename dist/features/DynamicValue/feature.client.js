@@ -1,13 +1,18 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+console.log('[DynamicValueFeature] feature.client.tsx loaded');
 import { createClientFeature } from '@payloadcms/richtext-lexical/client';
-import { $insertNodes } from '@payloadcms/richtext-lexical/lexical';
+import { $createTextNode, $insertNodes } from '@payloadcms/richtext-lexical/lexical';
 import { useLexicalComposerContext } from '@payloadcms/richtext-lexical/lexical/react/LexicalComposerContext';
 import { LexicalTypeaheadMenuPlugin } from '@payloadcms/richtext-lexical/lexical/react/LexicalTypeaheadMenuPlugin';
+import { useForm } from '@payloadcms/ui';
 import { AtSign, Hash, Variable } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 import * as ReactDOM from 'react-dom';
 import { $createDynamicValueNode, DynamicValueNode } from '../../nodes/DynamicValueNode/index.js';
+export function $isDynamicValueNode(node) {
+    return node?.getType?.() === 'dynamic-value';
+}
 function useTriggerMatch(trigger) {
     return useCallback((text)=>{
         const triggerIndex = text.lastIndexOf(trigger);
@@ -31,24 +36,50 @@ function useTriggerMatch(trigger) {
         trigger
     ]);
 }
+const SelectIcon = (trigger)=>{
+    const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable;
+    return ()=>/*#__PURE__*/ _jsx("div", {
+            style: {
+                alignItems: 'center',
+                display: 'flex',
+                height: '20px',
+                justifyContent: 'center',
+                width: '20px'
+            },
+            children: /*#__PURE__*/ _jsx(IconToUse, {
+                className: "icon",
+                size: 16,
+                style: {
+                    color: 'currentColor'
+                }
+            })
+        });
+};
 const DynamicValuePlugin = ({ anchorElem, options: allOptions, trigger })=>{
     const [editor] = useLexicalComposerContext();
+    const { fields } = useForm();
     const [queryString, setQueryString] = useState(null);
     const checkForTriggerMatch = useTriggerMatch(trigger);
     const options = useMemo(()=>{
         const searchString = queryString?.toLowerCase() || '';
-        return (allOptions || []).filter((option)=>option.label.toLowerCase().includes(searchString) || option.value.toLowerCase().includes(searchString)).map((opt)=>({
+        return (allOptions || []).filter((option)=>{
+            const val = fields[option.value]?.value;
+            const hasValue = val !== undefined && val !== null && val !== '';
+            return hasValue && (option.label.toLowerCase().includes(searchString) || option.value.toLowerCase().includes(searchString));
+        }).map((opt)=>({
                 ...opt,
                 key: opt.value
             }));
     }, [
         queryString,
-        allOptions
+        allOptions,
+        fields
     ]);
-    const TypeaheadMenu = LexicalTypeaheadMenuPlugin;
     const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable;
-    return /*#__PURE__*/ _jsx(TypeaheadMenu, {
-        anchorElem: anchorElem || (typeof document !== 'undefined' ? document.body : undefined),
+    return /*#__PURE__*/ _jsx(LexicalTypeaheadMenuPlugin, {
+        ...{
+            anchorElem: anchorElem || (typeof document !== 'undefined' ? document.body : undefined)
+        },
         menuRenderFn: (anchorElementRef, { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex })=>{
             const anchor = anchorElementRef?.current || anchorElem || (typeof document !== 'undefined' ? document.body : null);
             if (!anchor || !options.length) {
@@ -151,7 +182,8 @@ const DynamicValuePlugin = ({ anchorElem, options: allOptions, trigger })=>{
                 }
                 const node = $createDynamicValueNode(option.value, option.label);
                 $insertNodes([
-                    node
+                    node,
+                    $createTextNode(' ')
                 ]);
                 closeMenu();
             });
@@ -160,10 +192,115 @@ const DynamicValuePlugin = ({ anchorElem, options: allOptions, trigger })=>{
         triggerFn: checkForTriggerMatch
     });
 };
-export const DynamicValueFeatureClient = createClientFeature(({ props })=>{
+const DropdownItemComponent = ({ editor, field, item, trigger })=>{
+    const { fields } = useForm();
+    const val = fields[field.value]?.value;
+    const hasValue = val !== undefined && val !== null && val !== '';
+    if (!hasValue) {
+        return null;
+    }
+    const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable;
+    return /*#__PURE__*/ _jsxs("button", {
+        onClick: (e)=>{
+            e.preventDefault();
+            item.onSelect({
+                editor,
+                isActive: false
+            });
+        },
+        style: {
+            alignItems: 'center',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: '6px',
+            color: 'var(--theme-text)',
+            cursor: 'pointer',
+            display: 'flex',
+            gap: '10px',
+            padding: '8px 12px',
+            textAlign: 'left',
+            transition: 'all 0.15s ease',
+            whiteSpace: 'nowrap',
+            width: '100%'
+        },
+        type: "button",
+        children: [
+            /*#__PURE__*/ _jsx(IconToUse, {
+                size: 14,
+                style: {
+                    opacity: 0.4
+                }
+            }),
+            /*#__PURE__*/ _jsxs("div", {
+                style: {
+                    display: 'flex',
+                    flexDirection: 'column'
+                },
+                children: [
+                    /*#__PURE__*/ _jsx("span", {
+                        style: {
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            lineHeight: '1.2'
+                        },
+                        children: field.label
+                    }),
+                    /*#__PURE__*/ _jsx("span", {
+                        style: {
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '11px',
+                            lineHeight: '1.2',
+                            opacity: 0.5
+                        },
+                        children: field.value
+                    })
+                ]
+            })
+        ]
+    });
+};
+export const DynamicValueFeatureClient = createClientFeature((args)=>{
+    console.log('[DynamicValueFeature] Initializing Client Feature', {
+        args,
+        nodesFound: Boolean(DynamicValueNode)
+    });
+    const props = args?.clientFeatureProps || args?.props || {};
     const options = props?.options || [];
     const trigger = props?.trigger || '@';
-    const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable;
+    const groupItems = options.map((field)=>({
+            Component: ({ editor, item })=>/*#__PURE__*/ _jsx(DropdownItemComponent, {
+                    editor: editor,
+                    field: field,
+                    item: item,
+                    trigger: trigger
+                }),
+            isActive: ()=>false,
+            isEnabled: ()=>true,
+            key: `dv-item-${field.value}`,
+            label: field.label,
+            onSelect: ({ editor })=>{
+                console.log('[DynamicValueFeature] Toolbar Select:', field.value);
+                editor.update(()=>{
+                    try {
+                        const node = $createDynamicValueNode(field.value, field.label);
+                        $insertNodes([
+                            node,
+                            $createTextNode(' ')
+                        ]);
+                    } catch (e) {
+                        console.error('[DynamicValueFeature] Insertion failed:', e);
+                    }
+                });
+            },
+            order: 1
+        }));
+    const toolbarGroup = {
+        type: 'dropdown',
+        ChildComponent: SelectIcon(trigger),
+        items: groupItems,
+        key: 'dynamic-value-toolbar-group',
+        order: 10
+    };
     return {
         nodes: [
             DynamicValueNode
@@ -181,37 +318,7 @@ export const DynamicValueFeatureClient = createClientFeature(({ props })=>{
         sanitizedClientFeatureProps: props,
         toolbarFixed: {
             groups: [
-                {
-                    type: 'dropdown',
-                    ChildComponent: ()=>/*#__PURE__*/ _jsx("div", {
-                            style: {
-                                alignItems: 'center',
-                                display: 'flex',
-                                gap: '4px'
-                            },
-                            children: /*#__PURE__*/ _jsx(IconToUse, {
-                                size: 14,
-                                style: {
-                                    color: 'var(--theme-text)',
-                                    opacity: 0.7
-                                }
-                            })
-                        }),
-                    items: options.map((field)=>({
-                            key: field.value,
-                            label: field.label,
-                            onSelect: ({ editor })=>{
-                                editor.update(()=>{
-                                    const node = $createDynamicValueNode(field.value, field.label);
-                                    $insertNodes([
-                                        node
-                                    ]);
-                                });
-                            }
-                        })),
-                    key: 'dynamicValue',
-                    order: 99
-                }
+                toolbarGroup
             ]
         }
     };
