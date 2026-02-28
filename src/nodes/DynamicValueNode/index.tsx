@@ -3,6 +3,9 @@ import type { SerializedLexicalNode } from '@payloadcms/richtext-lexical/lexical
 import { $applyNodeReplacement, DecoratorNode } from '@payloadcms/richtext-lexical/lexical'
 import React from 'react'
 
+export const DYNAMIC_VALUE_NODE_TYPE = 'dynamic-value'
+export const LEGACY_DYNAMIC_VALUE_NODE_TYPE = 'dynamicValue'
+
 export type SerializedDynamicValueNode = {
   field: string
   label: string
@@ -23,7 +26,7 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
   }
 
   static getType(): string {
-    return 'dynamic-value'
+    return DYNAMIC_VALUE_NODE_TYPE
   }
 
   static importDOM() {
@@ -32,17 +35,14 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
         if (!domNode.hasAttribute('data-payload-dynamic-value')) {
           return null
         }
+
         return {
-          conversion: (domNode: HTMLSpanElement) => {
-            const field = domNode.getAttribute('data-payload-dynamic-field')
-            const label = domNode.textContent || undefined
-            if (field) {
-              return {
-                node: $createDynamicValueNode(field, label),
-              }
-            }
+          conversion: (el: HTMLSpanElement) => {
+            const field = el.getAttribute('data-payload-dynamic-field')
+            const label = el.textContent || undefined
+
             return {
-              node: null,
+              node: field ? $createDynamicValueNode(field, label) : null,
             }
           },
           priority: 1 as const,
@@ -63,7 +63,6 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
   }
 
   decorate(): React.ReactNode {
-    console.log('[DynamicValueNode] Decorating:', this.__field)
     return (
       <span
         contentEditable={false}
@@ -105,6 +104,7 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
     element.setAttribute('data-payload-dynamic-value', 'true')
     element.setAttribute('data-payload-dynamic-field', this.__field)
     element.textContent = this.__label
+
     return {
       element,
     }
@@ -112,7 +112,7 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
 
   exportJSON(): SerializedDynamicValueNode {
     return {
-      type: 'dynamic-value',
+      type: DYNAMIC_VALUE_NODE_TYPE,
       field: this.__field,
       label: this.__label,
       version: 1,
@@ -144,6 +144,12 @@ export function $createDynamicValueNode(field: string, label?: string): DynamicV
   return $applyNodeReplacement(new DynamicValueNode(field, label))
 }
 
-export function $isDynamicValueNode(node: any): node is DynamicValueNode {
-  return node?.getType?.() === 'dynamic-value'
+export function $isDynamicValueNode(node: unknown): node is DynamicValueNode {
+  return (
+    typeof node === 'object' &&
+    node !== null &&
+    'getType' in node &&
+    typeof (node as { getType: () => string }).getType === 'function' &&
+    (node as { getType: () => string }).getType() === DYNAMIC_VALUE_NODE_TYPE
+  )
 }

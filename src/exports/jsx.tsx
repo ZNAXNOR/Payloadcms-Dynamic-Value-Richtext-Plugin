@@ -4,86 +4,79 @@ import React from 'react'
 
 import type { SerializedDynamicValueNode } from '../nodes/DynamicValueNode/index.js'
 
-/**
- * JSX Converters for the DynamicValueNode.
- *
- * @example Basic usage (renders the stored label):
- * ```tsx
- * import { RichText } from '@payloadcms/richtext-lexical/react'
- * import { DynamicValueJSXConverters } from '@od-labs/payloadcms-dynamic-value-richtext/jsx'
- *
- * <RichText data={content} converters={DynamicValueJSXConverters} />
- * ```
- *
- * @example With live data substitution:
- * ```tsx
- * import { RichText } from '@payloadcms/richtext-lexical/react'
- * import { createDynamicValueJSXConverters } from '@od-labs/payloadcms-dynamic-value-richtext/jsx'
- *
- * const converters = createDynamicValueJSXConverters({ data: myDocumentData })
- * <RichText data={content} converters={converters} />
- * ```
- */
-export const DynamicValueJSXConverters: JSXConverters = {
-  'dynamic-value': ({ node }) => {
-    const n = node as SerializedDynamicValueNode
-    return (
-      <span data-payload-dynamic-field={n.field} data-payload-dynamic-value="true" key={n.field}>
-        {n.label}
-      </span>
-    )
-  },
+import {
+  DYNAMIC_VALUE_NODE_TYPE,
+  LEGACY_DYNAMIC_VALUE_NODE_TYPE,
+} from '../nodes/DynamicValueNode/index.js'
+
+const renderDynamicValueLabel = (node: SerializedDynamicValueNode) => {
+  return (
+    <span
+      data-payload-dynamic-field={node.field}
+      data-payload-dynamic-value="true"
+      key={node.field}
+    >
+      {node.label}
+    </span>
+  )
+}
+
+const dynamicValueJSXConverter = ({ node }: { node: unknown }) => {
+  const dynamicNode = node as SerializedDynamicValueNode
+  return renderDynamicValueLabel(dynamicNode)
 }
 
 /**
- * Creates JSX converters that resolve the node's field value from a data object
- * at render time. Useful for substituting real values in frontend rendering.
- *
- * @param options.data - A flat or nested object containing the actual values.
- *   Field paths like "companyInfo.companyName" will be resolved using dot notation.
- * @param options.fallback - Optional fallback renderer when value not found.
- *   Defaults to rendering the stored label.
+ * JSX converters for dynamic value nodes. Includes both the current node type and
+ * the legacy type to keep older content working.
  */
+export const DynamicValueJSXConverters: JSXConverters = {
+  [DYNAMIC_VALUE_NODE_TYPE]: dynamicValueJSXConverter,
+  [LEGACY_DYNAMIC_VALUE_NODE_TYPE]: dynamicValueJSXConverter,
+}
+
+export const withDynamicValueJSXConverters = (converters?: JSXConverters): JSXConverters => ({
+  ...(converters || {}),
+  ...DynamicValueJSXConverters,
+})
+
 export function createDynamicValueJSXConverters(options: {
   data?: Record<string, unknown>
   fallback?: (node: SerializedDynamicValueNode) => React.ReactNode
 }): JSXConverters {
   const { data = {}, fallback } = options
 
-  return {
-    'dynamic-value': ({ node }) => {
-      const n = node as SerializedDynamicValueNode
-
-      // Resolve dot-notation field paths (e.g. "companyInfo.companyName")
-      const resolvedValue = n.field.split('.').reduce<unknown>((obj, key) => {
-        if (obj && typeof obj === 'object' && key in (obj as Record<string, unknown>)) {
-          return (obj as Record<string, unknown>)[key]
-        }
-        return undefined
-      }, data)
-
-      if (resolvedValue !== undefined && resolvedValue !== null && resolvedValue !== '') {
-        return (
-          <span
-            data-payload-dynamic-field={n.field}
-            data-payload-dynamic-value="true"
-            key={n.field}
-          >
-            {String(resolvedValue)}
-          </span>
-        )
+  const converter = ({ node }: { node: unknown }) => {
+    const dynamicNode = node as SerializedDynamicValueNode
+    const resolvedValue = dynamicNode.field.split('.').reduce<unknown>((current, key) => {
+      if (current && typeof current === 'object' && key in (current as Record<string, unknown>)) {
+        return (current as Record<string, unknown>)[key]
       }
 
-      // Fallback: call custom fallback or render stored label
-      if (fallback) {
-        return <React.Fragment key={n.field}>{fallback(n)}</React.Fragment>
-      }
+      return undefined
+    }, data)
 
+    if (resolvedValue !== undefined && resolvedValue !== null && resolvedValue !== '') {
       return (
-        <span data-payload-dynamic-field={n.field} data-payload-dynamic-value="true" key={n.field}>
-          {n.label}
+        <span
+          data-payload-dynamic-field={dynamicNode.field}
+          data-payload-dynamic-value="true"
+          key={dynamicNode.field}
+        >
+          {String(resolvedValue)}
         </span>
       )
-    },
+    }
+
+    if (fallback) {
+      return <React.Fragment key={dynamicNode.field}>{fallback(dynamicNode)}</React.Fragment>
+    }
+
+    return renderDynamicValueLabel(dynamicNode)
+  }
+
+  return {
+    [DYNAMIC_VALUE_NODE_TYPE]: converter,
+    [LEGACY_DYNAMIC_VALUE_NODE_TYPE]: converter,
   }
 }

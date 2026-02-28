@@ -1,6 +1,8 @@
 import type { SerializedLexicalNode } from '@payloadcms/richtext-lexical/lexical';
 import { DecoratorNode } from '@payloadcms/richtext-lexical/lexical';
 import React from 'react';
+export declare const DYNAMIC_VALUE_NODE_TYPE = "dynamic-value";
+export declare const LEGACY_DYNAMIC_VALUE_NODE_TYPE = "dynamicValue";
 export type SerializedDynamicValueNode = {
     field: string;
     label: string;
@@ -13,10 +15,8 @@ export declare class DynamicValueNode extends DecoratorNode<React.ReactNode> {
     static getType(): string;
     static importDOM(): {
         span: (domNode: HTMLSpanElement) => {
-            conversion: (domNode: HTMLSpanElement) => {
-                node: DynamicValueNode;
-            } | {
-                node: null;
+            conversion: (el: HTMLSpanElement) => {
+                node: DynamicValueNode | null;
             };
             priority: 1;
         } | null;
@@ -35,4 +35,4 @@ export declare class DynamicValueNode extends DecoratorNode<React.ReactNode> {
     updateDOM(): boolean;
 }
 export declare function $createDynamicValueNode(field: string, label?: string): DynamicValueNode;
-export declare function $isDynamicValueNode(node: any): node is DynamicValueNode;
+export declare function $isDynamicValueNode(node: unknown): node is DynamicValueNode;

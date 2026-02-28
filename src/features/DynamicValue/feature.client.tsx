@@ -1,7 +1,5 @@
 'use client'
 
-console.log('[DynamicValueFeature] feature.client.tsx loaded')
-
 import { createClientFeature } from '@payloadcms/richtext-lexical/client'
 import {
   $createTextNode,
@@ -54,16 +52,14 @@ function useTriggerMatch(trigger: string) {
 const SelectIcon = (trigger: string) => {
   const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable
   return () => (
-    <div
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        height: '20px',
-        justifyContent: 'center',
-        width: '20px',
-      }}
-    >
-      <IconToUse className="icon" size={16} style={{ color: 'currentColor' }} />
+    <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'center', opacity: 0.8 }}>
+      <IconToUse
+        className="icon"
+        focusable="false"
+        size={14}
+        strokeWidth={1.5}
+        style={{ color: 'currentColor' }}
+      />
     </div>
   )
 }
@@ -121,70 +117,68 @@ const DynamicValuePlugin = ({
 
         return ReactDOM.createPortal(
           <div
-            className="dynamic-value-popup"
+            className="slash-menu-popup"
             style={{
-              background: 'var(--theme-elevation-100)',
-              border: '1px solid var(--theme-elevation-250)',
-              borderRadius: '8px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+              maxHeight: '400px',
               minWidth: '260px',
-              overflow: 'hidden',
-              padding: '4px',
-              zIndex: 100000,
+              overflowY: 'auto',
+              padding: '8px',
             }}
           >
-            <div
-              style={{
-                borderBottom: '1px solid var(--theme-elevation-150)',
-                color: 'var(--theme-text)',
-                fontSize: '10px',
-                fontWeight: 700,
-                letterSpacing: '0.05em',
-                marginBottom: '4px',
-                opacity: 0.6,
-                padding: '10px 14px 6px',
-                textTransform: 'uppercase',
-              }}
-            >
-              Merge Fields
-            </div>
-            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <div className="slash-menu-popup__group">
+              <div className="slash-menu-popup__group-title">Dynamic Values</div>
               {options.map((option, index) => {
                 const isSelected = selectedIndex === index
                 return (
                   <button
+                    aria-selected={isSelected}
+                    className={`slash-menu-popup__item ${isSelected ? 'slash-menu-popup__item--selected' : ''}`}
                     key={option.value}
                     onClick={() => selectOptionAndCleanUp(option)}
                     onMouseEnter={() => setHighlightedIndex(index)}
-                    style={{
-                      alignItems: 'center',
-                      background: isSelected ? 'var(--theme-primary)' : 'transparent',
-                      border: 'none',
-                      borderRadius: '6px',
-                      color: isSelected ? 'white' : 'var(--theme-text)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      gap: '10px',
-                      padding: '8px 12px',
-                      textAlign: 'left',
-                      transition: 'all 0.15s ease',
-                      width: '100%',
-                    }}
+                    role="option"
+                    style={{ minHeight: '50px' }}
+                    tabIndex={-1}
                     type="button"
                   >
-                    <IconToUse size={14} style={{ opacity: isSelected ? 1 : 0.4 }} />
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 500 }}>{option.label}</span>
+                    <IconToUse
+                      className="icon"
+                      size={20}
+                      strokeWidth={1.5}
+                      style={{ flexShrink: 0 }}
+                    />
+                    <span
+                      className="slash-menu-popup__item-text"
+                      style={{
+                        alignItems: 'flex-start',
+                        display: 'flex',
+                        flex: '1',
+                        flexDirection: 'column',
+                        marginLeft: '8px',
+                      }}
+                    >
+                      <span
+                        className="text"
+                        style={{
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {option.label}
+                      </span>
                       <span
                         style={{
                           fontFamily: 'var(--font-mono)',
                           fontSize: '11px',
+                          lineHeight: 1.2,
+                          marginTop: '2px',
                           opacity: 0.5,
                         }}
                       >
                         {option.value}
                       </span>
-                    </div>
+                    </span>
                   </button>
                 )
               })}
@@ -223,50 +217,53 @@ const DropdownItemComponent = ({ editor, field, item, trigger }: any) => {
 
   return (
     <button
+      aria-label={field.label}
+      className="btn toolbar-popup__dropdown-item btn--icon btn--icon-style-none btn--size-medium btn--icon-position-left btn--style-none"
+      data-item-key={field.value}
       onClick={(e) => {
         e.preventDefault()
         item.onSelect({ editor, isActive: false })
       }}
-      style={{
-        alignItems: 'center',
-        background: 'transparent',
-        border: 'none',
-        borderRadius: '6px',
-        color: 'var(--theme-text)',
-        cursor: 'pointer',
-        display: 'flex',
-        gap: '10px',
-        padding: '8px 12px',
-        textAlign: 'left',
-        transition: 'all 0.15s ease',
-        whiteSpace: 'nowrap',
-        width: '100%',
-      }}
+      style={{ minHeight: '50px', whiteSpace: 'nowrap' }}
+      title={field.label}
       type="button"
     >
-      <IconToUse size={14} style={{ opacity: 0.4 }} />
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.2' }}>{field.label}</span>
+      <span className="btn__content" style={{ alignItems: 'center', display: 'flex' }}>
         <span
+          className="btn__label"
           style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '11px',
-            lineHeight: '1.2',
-            opacity: 0.5,
+            alignItems: 'flex-start',
+            display: 'flex',
+            flex: 1,
+            flexDirection: 'column',
+            marginLeft: '8px',
+            marginRight: '8px',
           }}
         >
-          {field.value}
+          <span className="text" style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.2' }}>
+            {field.label}
+          </span>
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '11px',
+              lineHeight: '1.2',
+              marginTop: '2px',
+              opacity: 0.5,
+            }}
+          >
+            {field.value}
+          </span>
         </span>
-      </div>
+        <span className="btn__icon" style={{ flexShrink: 0 }}>
+          <IconToUse size={20} strokeWidth={1.5} style={{ opacity: 0.4 }} />
+        </span>
+      </span>
     </button>
   )
 }
 
 export const DynamicValueFeatureClient = createClientFeature((args: any) => {
-  console.log('[DynamicValueFeature] Initializing Client Feature', {
-    args,
-    nodesFound: Boolean(DynamicValueNode),
-  })
   const props = args?.clientFeatureProps || args?.props || {}
   const options = props?.options || []
   const trigger = props?.trigger || '@'
@@ -280,14 +277,9 @@ export const DynamicValueFeatureClient = createClientFeature((args: any) => {
     key: `dv-item-${field.value}`,
     label: field.label,
     onSelect: ({ editor }: any) => {
-      console.log('[DynamicValueFeature] Toolbar Select:', field.value)
       editor.update(() => {
-        try {
-          const node = $createDynamicValueNode(field.value, field.label)
-          $insertNodes([node, $createTextNode(' ')])
-        } catch (e) {
-          console.error('[DynamicValueFeature] Insertion failed:', e)
-        }
+        const node = $createDynamicValueNode(field.value, field.label)
+        $insertNodes([node, $createTextNode(' ')])
       })
     },
     order: 1,
@@ -298,7 +290,7 @@ export const DynamicValueFeatureClient = createClientFeature((args: any) => {
     ChildComponent: SelectIcon(trigger),
     items: groupItems,
     key: 'dynamic-value-toolbar-group', // Unique key to avoid Link feature collision
-    order: 10,
+    order: 100,
   }
 
   return {

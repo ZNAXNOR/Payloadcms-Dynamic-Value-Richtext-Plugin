@@ -5,13 +5,13 @@ export type DynamicValueOption = {
 };
 export type DynamicValueConfig = {
     /**
-     * Directly provided fields for dynamic values
-     */
-    fields?: Field[];
-    /**
      * Collections to pull fields from
      */
     collections?: CollectionSlug[];
+    /**
+     * Directly provided fields for dynamic values
+     */
+    fields?: Field[];
     /**
      * Globals to pull fields from
      */

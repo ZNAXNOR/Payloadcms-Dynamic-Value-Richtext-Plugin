@@ -74,6 +74,38 @@ import { DynamicValueFeature } from '@od-labs/payloadcms-dynamic-value-richtext'
 2. **Injection**: When you type the trigger character in the editor, a popup appears showing all available fields.
 3. **Storage**: The variable is stored as a custom `DecoratorNode` in Lexical, which holds a reference to the field path (`value`) and the display label.
 
+## Frontend Rendering (Important)
+
+If you render Lexical content on your website with `RichText`, you must provide this plugin's JSX converters.
+Without this, Payload will show custom nodes as `unknown node`.
+
+### Option A: automatic (recommended)
+
+Use the plugin-provided wrapper component that injects converters for you:
+
+```tsx
+import { DynamicValueRichText } from '@od-labs/payloadcms-dynamic-value-richtext/react'
+
+;<DynamicValueRichText data={page.content} payloadData={page} />
+```
+
+### Option B: manual converters
+
+```tsx
+import { RichText } from '@payloadcms/richtext-lexical/react'
+import { DynamicValueJSXConverters } from '@od-labs/payloadcms-dynamic-value-richtext/jsx'
+
+;<RichText data={page.content} converters={DynamicValueJSXConverters} />
+```
+
+If you want to resolve the dynamic value from real document data at render time:
+
+```tsx
+import { createDynamicValueJSXConverters } from '@od-labs/payloadcms-dynamic-value-richtext/jsx'
+
+const converters = createDynamicValueJSXConverters({ data: page })
+```
+
 ## Development
 
 To run the development environment:

@@ -1,92 +1,100 @@
 import { DynamicValueFeature } from './features/DynamicValue/feature.server.js'
+
+export { DynamicValueRichText } from './exports/react.js'
+
 export { DynamicValueFeature } from './features/DynamicValue/feature.server.js'
 export { DynamicValueNode } from './nodes/DynamicValueNode/index.js'
 
-export const dynamicValuePlugin = (pluginOptions: any) => (config: any) => {
-  console.log('[DynamicValuePlugin] Initializing with options:', pluginOptions)
-  if (!config.custom) {
-    config.custom = {}
+type PluginOptions = Parameters<typeof DynamicValueFeature>[0]
+
+type FieldLike = {
+  blocks?: Array<{ fields: FieldLike[] }>
+  editor?: {
+    features?: ((args: unknown) => any[]) | any[]
   }
-  config.custom.dynamicValue = pluginOptions
+  fields?: FieldLike[]
+  tabs?: Array<{ fields: FieldLike[] }>
+  type?: string
+}
 
-  const injectIntoFields = (fields: any[]): any[] => {
-    return fields.map((field) => {
-      if (field.type === 'richText' && field.editor && typeof field.editor === 'object') {
-        if ('features' in field.editor) {
-          if (Array.isArray(field.editor.features)) {
-            const hasFeature = field.editor.features.some((f: any) => f?.key === 'dynamicValue')
-            if (!hasFeature) {
-              field.editor.features.push(DynamicValueFeature())
-            }
-          } else if (typeof field.editor.features === 'function') {
-            const originalFeatures = field.editor.features
-            field.editor.features = (args: any) => {
-              const features = originalFeatures(args)
-              if (!features.some((f: any) => f?.key === 'dynamicValue')) {
-                return [...features, DynamicValueFeature()]
-              }
-              return features
-            }
-          }
-        }
-      }
-
-      if ('fields' in field && Array.isArray(field.fields)) {
-        return { ...field, fields: injectIntoFields(field.fields) }
-      }
-
-      if (field.type === 'tabs' && Array.isArray(field.tabs)) {
-        return {
-          ...field,
-          tabs: field.tabs.map((tab: any) => ({ ...tab, fields: injectIntoFields(tab.fields) })),
-        }
-      }
-
-      if (field.type === 'blocks' && Array.isArray(field.blocks)) {
-        return {
-          ...field,
-          blocks: field.blocks.map((block: any) => ({
-            ...block,
-            fields: injectIntoFields(block.fields),
-          })),
-        }
-      }
-
-      return field
-    })
+const ensureDynamicFeature = (features: any[]): any[] => {
+  if (features.some((feature) => feature?.key === 'dynamicValue')) {
+    return features
   }
 
-  if (config.collections) {
-    config.collections = config.collections.map((c: any) => ({
-      ...c,
-      fields: injectIntoFields(c.fields),
+  return [...features, DynamicValueFeature()]
+}
+
+const injectIntoFields = (fields: FieldLike[]): FieldLike[] => {
+  return fields.map((field) => {
+    const nextField: FieldLike = { ...field }
+
+    if (field.type === 'richText' && field.editor && typeof field.editor === 'object') {
+      const nextEditor = { ...field.editor }
+
+      if (Array.isArray(nextEditor.features)) {
+        nextEditor.features = ensureDynamicFeature(nextEditor.features)
+      } else if (typeof nextEditor.features === 'function') {
+        const originalFeatures = nextEditor.features
+        nextEditor.features = (args) => ensureDynamicFeature(originalFeatures(args))
+      }
+
+      nextField.editor = nextEditor
+    }
+
+    if (Array.isArray(field.fields)) {
+      nextField.fields = injectIntoFields(field.fields)
+    }
+
+    if (Array.isArray(field.tabs)) {
+      nextField.tabs = field.tabs.map((tab) => ({
+        ...tab,
+        fields: injectIntoFields(tab.fields),
+      }))
+    }
+
+    if (field.type === 'blocks' && Array.isArray(field.blocks)) {
+      nextField.blocks = field.blocks.map((block) => ({
+        ...block,
+        fields: injectIntoFields(block.fields),
+      }))
+    }
+
+    return nextField
+  })
+}
+
+export const dynamicValuePlugin = (pluginOptions: PluginOptions) => (config: any) => {
+  const nextConfig = { ...config }
+
+  nextConfig.custom = {
+    ...(nextConfig.custom || {}),
+    dynamicValue: pluginOptions,
+  }
+
+  if (Array.isArray(nextConfig.collections)) {
+    nextConfig.collections = nextConfig.collections.map((collection: any) => ({
+      ...collection,
+      fields: injectIntoFields(collection.fields),
     }))
   }
 
-  if (config.globals) {
-    config.globals = config.globals.map((g: any) => ({
-      ...g,
-      fields: injectIntoFields(g.fields),
+  if (Array.isArray(nextConfig.globals)) {
+    nextConfig.globals = nextConfig.globals.map((globalConfig: any) => ({
+      ...globalConfig,
+      fields: injectIntoFields(globalConfig.fields),
     }))
   }
 
-  // Handle global editor if it exists
-  if (config.editor && typeof config.editor === 'object' && 'features' in config.editor) {
-    if (Array.isArray(config.editor.features)) {
-      if (!config.editor.features.some((f: any) => f?.key === 'dynamicValue')) {
-        config.editor.features.push(DynamicValueFeature())
-      }
-    } else if (typeof config.editor.features === 'function') {
-      const originalFeatures = config.editor.features
-      config.editor.features = (args: any) => {
-        const features = originalFeatures(args)
-        if (!features.some((f: any) => f?.key === 'dynamicValue')) {
-          return [...features, DynamicValueFeature()]
-        }
-        return features
-      }
+  if (nextConfig.editor && typeof nextConfig.editor === 'object' && 'features' in nextConfig.editor) {
+    if (Array.isArray(nextConfig.editor.features)) {
+      nextConfig.editor.features = ensureDynamicFeature(nextConfig.editor.features)
+    } else if (typeof nextConfig.editor.features === 'function') {
+      const originalFeatures = nextConfig.editor.features
+      nextConfig.editor.features = (args: unknown) => ensureDynamicFeature(originalFeatures(args))
     }
   }
 
-  return config
+  return nextConfig
 }
+
