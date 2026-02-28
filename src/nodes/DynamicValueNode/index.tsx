@@ -112,9 +112,9 @@ export class DynamicValueNode extends DecoratorNode<React.ReactNode> {
 
   exportJSON(): SerializedDynamicValueNode {
     return {
+      type: DYNAMIC_VALUE_NODE_TYPE,
       field: this.__field,
       label: this.__label,
-      type: DYNAMIC_VALUE_NODE_TYPE,
       version: 1,
     }
   }

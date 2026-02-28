@@ -1,6 +1,5 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-console.log('[DynamicValueFeature] feature.client.tsx loaded');
 import { createClientFeature } from '@payloadcms/richtext-lexical/client';
 import { $createTextNode, $insertNodes } from '@payloadcms/richtext-lexical/lexical';
 import { useLexicalComposerContext } from '@payloadcms/richtext-lexical/lexical/react/LexicalComposerContext';
@@ -42,13 +41,14 @@ const SelectIcon = (trigger)=>{
             style: {
                 alignItems: 'center',
                 display: 'flex',
-                height: '20px',
                 justifyContent: 'center',
-                width: '20px'
+                opacity: 0.8
             },
             children: /*#__PURE__*/ _jsx(IconToUse, {
                 className: "icon",
-                size: 16,
+                focusable: "false",
+                size: 14,
+                strokeWidth: 1.5,
                 style: {
                     color: 'currentColor'
                 }
@@ -85,75 +85,59 @@ const DynamicValuePlugin = ({ anchorElem, options: allOptions, trigger })=>{
             if (!anchor || !options.length) {
                 return null;
             }
-            return /*#__PURE__*/ ReactDOM.createPortal(/*#__PURE__*/ _jsxs("div", {
-                className: "dynamic-value-popup",
+            return /*#__PURE__*/ ReactDOM.createPortal(/*#__PURE__*/ _jsx("div", {
+                className: "slash-menu-popup",
                 style: {
-                    background: 'var(--theme-elevation-100)',
-                    border: '1px solid var(--theme-elevation-250)',
-                    borderRadius: '8px',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                    maxHeight: '400px',
                     minWidth: '260px',
-                    overflow: 'hidden',
-                    padding: '4px',
-                    zIndex: 100000
+                    overflowY: 'auto',
+                    padding: '8px'
                 },
-                children: [
-                    /*#__PURE__*/ _jsx("div", {
-                        style: {
-                            borderBottom: '1px solid var(--theme-elevation-150)',
-                            color: 'var(--theme-text)',
-                            fontSize: '10px',
-                            fontWeight: 700,
-                            letterSpacing: '0.05em',
-                            marginBottom: '4px',
-                            opacity: 0.6,
-                            padding: '10px 14px 6px',
-                            textTransform: 'uppercase'
-                        },
-                        children: "Merge Fields"
-                    }),
-                    /*#__PURE__*/ _jsx("div", {
-                        style: {
-                            maxHeight: '300px',
-                            overflowY: 'auto'
-                        },
-                        children: options.map((option, index)=>{
+                children: /*#__PURE__*/ _jsxs("div", {
+                    className: "slash-menu-popup__group",
+                    children: [
+                        /*#__PURE__*/ _jsx("div", {
+                            className: "slash-menu-popup__group-title",
+                            children: "Dynamic Values"
+                        }),
+                        options.map((option, index)=>{
                             const isSelected = selectedIndex === index;
                             return /*#__PURE__*/ _jsxs("button", {
+                                "aria-selected": isSelected,
+                                className: `slash-menu-popup__item ${isSelected ? 'slash-menu-popup__item--selected' : ''}`,
                                 onClick: ()=>selectOptionAndCleanUp(option),
                                 onMouseEnter: ()=>setHighlightedIndex(index),
+                                role: "option",
                                 style: {
-                                    alignItems: 'center',
-                                    background: isSelected ? 'var(--theme-primary)' : 'transparent',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    color: isSelected ? 'white' : 'var(--theme-text)',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    gap: '10px',
-                                    padding: '8px 12px',
-                                    textAlign: 'left',
-                                    transition: 'all 0.15s ease',
-                                    width: '100%'
+                                    minHeight: '50px'
                                 },
+                                tabIndex: -1,
                                 type: "button",
                                 children: [
                                     /*#__PURE__*/ _jsx(IconToUse, {
-                                        size: 14,
+                                        className: "icon",
+                                        size: 20,
+                                        strokeWidth: 1.5,
                                         style: {
-                                            opacity: isSelected ? 1 : 0.4
+                                            flexShrink: 0
                                         }
                                     }),
-                                    /*#__PURE__*/ _jsxs("div", {
+                                    /*#__PURE__*/ _jsxs("span", {
+                                        className: "slash-menu-popup__item-text",
                                         style: {
+                                            alignItems: 'flex-start',
                                             display: 'flex',
-                                            flexDirection: 'column'
+                                            flex: '1',
+                                            flexDirection: 'column',
+                                            marginLeft: '8px'
                                         },
                                         children: [
                                             /*#__PURE__*/ _jsx("span", {
+                                                className: "text",
                                                 style: {
                                                     fontSize: '13px',
-                                                    fontWeight: 500
+                                                    fontWeight: '500',
+                                                    lineHeight: 1.2
                                                 },
                                                 children: option.label
                                             }),
@@ -161,6 +145,8 @@ const DynamicValuePlugin = ({ anchorElem, options: allOptions, trigger })=>{
                                                 style: {
                                                     fontFamily: 'var(--font-mono)',
                                                     fontSize: '11px',
+                                                    lineHeight: 1.2,
+                                                    marginTop: '2px',
                                                     opacity: 0.5
                                                 },
                                                 children: option.value
@@ -170,8 +156,8 @@ const DynamicValuePlugin = ({ anchorElem, options: allOptions, trigger })=>{
                                 ]
                             }, option.value);
                         })
-                    })
-                ]
+                    ]
+                })
             }), anchor);
         },
         onQueryChange: setQueryString,
@@ -200,7 +186,10 @@ const DropdownItemComponent = ({ editor, field, item, trigger })=>{
         return null;
     }
     const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable;
-    return /*#__PURE__*/ _jsxs("button", {
+    return /*#__PURE__*/ _jsx("button", {
+        "aria-label": field.label,
+        className: "btn toolbar-popup__dropdown-item btn--icon btn--icon-style-none btn--size-medium btn--icon-position-left btn--style-none",
+        "data-item-key": field.value,
         onClick: (e)=>{
             e.preventDefault();
             item.onSelect({
@@ -209,61 +198,68 @@ const DropdownItemComponent = ({ editor, field, item, trigger })=>{
             });
         },
         style: {
-            alignItems: 'center',
-            background: 'transparent',
-            border: 'none',
-            borderRadius: '6px',
-            color: 'var(--theme-text)',
-            cursor: 'pointer',
-            display: 'flex',
-            gap: '10px',
-            padding: '8px 12px',
-            textAlign: 'left',
-            transition: 'all 0.15s ease',
-            whiteSpace: 'nowrap',
-            width: '100%'
+            minHeight: '50px',
+            whiteSpace: 'nowrap'
         },
+        title: field.label,
         type: "button",
-        children: [
-            /*#__PURE__*/ _jsx(IconToUse, {
-                size: 14,
-                style: {
-                    opacity: 0.4
-                }
-            }),
-            /*#__PURE__*/ _jsxs("div", {
-                style: {
-                    display: 'flex',
-                    flexDirection: 'column'
-                },
-                children: [
-                    /*#__PURE__*/ _jsx("span", {
+        children: /*#__PURE__*/ _jsxs("span", {
+            className: "btn__content",
+            style: {
+                alignItems: 'center',
+                display: 'flex'
+            },
+            children: [
+                /*#__PURE__*/ _jsxs("span", {
+                    className: "btn__label",
+                    style: {
+                        alignItems: 'flex-start',
+                        display: 'flex',
+                        flex: 1,
+                        flexDirection: 'column',
+                        marginLeft: '8px',
+                        marginRight: '8px'
+                    },
+                    children: [
+                        /*#__PURE__*/ _jsx("span", {
+                            className: "text",
+                            style: {
+                                fontSize: '13px',
+                                fontWeight: 500,
+                                lineHeight: '1.2'
+                            },
+                            children: field.label
+                        }),
+                        /*#__PURE__*/ _jsx("span", {
+                            style: {
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '11px',
+                                lineHeight: '1.2',
+                                marginTop: '2px',
+                                opacity: 0.5
+                            },
+                            children: field.value
+                        })
+                    ]
+                }),
+                /*#__PURE__*/ _jsx("span", {
+                    className: "btn__icon",
+                    style: {
+                        flexShrink: 0
+                    },
+                    children: /*#__PURE__*/ _jsx(IconToUse, {
+                        size: 20,
+                        strokeWidth: 1.5,
                         style: {
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            lineHeight: '1.2'
-                        },
-                        children: field.label
-                    }),
-                    /*#__PURE__*/ _jsx("span", {
-                        style: {
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '11px',
-                            lineHeight: '1.2',
-                            opacity: 0.5
-                        },
-                        children: field.value
+                            opacity: 0.4
+                        }
                     })
-                ]
-            })
-        ]
+                })
+            ]
+        })
     });
 };
 export const DynamicValueFeatureClient = createClientFeature((args)=>{
-    console.log('[DynamicValueFeature] Initializing Client Feature', {
-        args,
-        nodesFound: Boolean(DynamicValueNode)
-    });
     const props = args?.clientFeatureProps || args?.props || {};
     const options = props?.options || [];
     const trigger = props?.trigger || '@';
@@ -279,17 +275,12 @@ export const DynamicValueFeatureClient = createClientFeature((args)=>{
             key: `dv-item-${field.value}`,
             label: field.label,
             onSelect: ({ editor })=>{
-                console.log('[DynamicValueFeature] Toolbar Select:', field.value);
                 editor.update(()=>{
-                    try {
-                        const node = $createDynamicValueNode(field.value, field.label);
-                        $insertNodes([
-                            node,
-                            $createTextNode(' ')
-                        ]);
-                    } catch (e) {
-                        console.error('[DynamicValueFeature] Insertion failed:', e);
-                    }
+                    const node = $createDynamicValueNode(field.value, field.label);
+                    $insertNodes([
+                        node,
+                        $createTextNode(' ')
+                    ]);
                 });
             },
             order: 1
@@ -299,7 +290,7 @@ export const DynamicValueFeatureClient = createClientFeature((args)=>{
         ChildComponent: SelectIcon(trigger),
         items: groupItems,
         key: 'dynamic-value-toolbar-group',
-        order: 10
+        order: 100
     };
     return {
         nodes: [

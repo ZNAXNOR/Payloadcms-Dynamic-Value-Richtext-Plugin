@@ -3,7 +3,7 @@ import type { JSXConverters } from '@payloadcms/richtext-lexical/react'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import React from 'react'
 
-import { withDynamicValueJSXConverters } from './jsx.js'
+import { createDynamicValueJSXConverters } from './jsx.js'
 
 type DynamicValueRichTextProps = {
   className?: string
@@ -12,6 +12,7 @@ type DynamicValueRichTextProps = {
   disableContainer?: boolean
   disableIndent?: boolean | string[]
   disableTextAlign?: boolean | string[]
+  payloadData?: Record<string, unknown>
 }
 
 /**
@@ -22,7 +23,16 @@ type DynamicValueRichTextProps = {
  */
 export const DynamicValueRichText: React.FC<DynamicValueRichTextProps> = ({
   converters,
+  payloadData,
   ...props
 }) => {
-  return <RichText {...props} converters={withDynamicValueJSXConverters(converters)} />
+  return (
+    <RichText
+      {...props}
+      converters={{
+        ...(converters || {}),
+        ...createDynamicValueJSXConverters({ data: payloadData || props.data || {} }),
+      }}
+    />
+  )
 }

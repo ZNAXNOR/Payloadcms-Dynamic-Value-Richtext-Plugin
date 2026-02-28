@@ -1,6 +1,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { $applyNodeReplacement, DecoratorNode } from '@payloadcms/richtext-lexical/lexical';
 import React from 'react';
+export const DYNAMIC_VALUE_NODE_TYPE = 'dynamic-value';
+export const LEGACY_DYNAMIC_VALUE_NODE_TYPE = 'dynamicValue';
 export class DynamicValueNode extends DecoratorNode {
     __field;
     __label;
@@ -13,7 +15,7 @@ export class DynamicValueNode extends DecoratorNode {
         return new DynamicValueNode(node.__field, node.__label, node.getKey());
     }
     static getType() {
-        return 'dynamic-value';
+        return DYNAMIC_VALUE_NODE_TYPE;
     }
     static importDOM() {
         return {
@@ -22,16 +24,11 @@ export class DynamicValueNode extends DecoratorNode {
                     return null;
                 }
                 return {
-                    conversion: (domNode)=>{
-                        const field = domNode.getAttribute('data-payload-dynamic-field');
-                        const label = domNode.textContent || undefined;
-                        if (field) {
-                            return {
-                                node: $createDynamicValueNode(field, label)
-                            };
-                        }
+                    conversion: (el)=>{
+                        const field = el.getAttribute('data-payload-dynamic-field');
+                        const label = el.textContent || undefined;
                         return {
-                            node: null
+                            node: field ? $createDynamicValueNode(field, label) : null
                         };
                     },
                     priority: 1
@@ -49,7 +46,6 @@ export class DynamicValueNode extends DecoratorNode {
         return span;
     }
     decorate() {
-        console.log('[DynamicValueNode] Decorating:', this.__field);
         return /*#__PURE__*/ _jsxs("span", {
             contentEditable: false,
             style: {
@@ -94,7 +90,7 @@ export class DynamicValueNode extends DecoratorNode {
     }
     exportJSON() {
         return {
-            type: 'dynamic-value',
+            type: DYNAMIC_VALUE_NODE_TYPE,
             field: this.__field,
             label: this.__label,
             version: 1
@@ -120,7 +116,7 @@ export function $createDynamicValueNode(field, label) {
     return $applyNodeReplacement(new DynamicValueNode(field, label));
 }
 export function $isDynamicValueNode(node) {
-    return node?.getType?.() === 'dynamic-value';
+    return typeof node === 'object' && node !== null && 'getType' in node && typeof node.getType === 'function' && node.getType() === DYNAMIC_VALUE_NODE_TYPE;
 }
 
 //# sourceMappingURL=index.js.map

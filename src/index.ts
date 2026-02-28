@@ -1,5 +1,7 @@
 import { DynamicValueFeature } from './features/DynamicValue/feature.server.js'
 
+export { DynamicValueRichText } from './exports/react.js'
+
 export { DynamicValueFeature } from './features/DynamicValue/feature.server.js'
 export { DynamicValueNode } from './nodes/DynamicValueNode/index.js'
 
@@ -8,7 +10,7 @@ type PluginOptions = Parameters<typeof DynamicValueFeature>[0]
 type FieldLike = {
   blocks?: Array<{ fields: FieldLike[] }>
   editor?: {
-    features?: any[] | ((args: unknown) => any[])
+    features?: ((args: unknown) => any[]) | any[]
   }
   fields?: FieldLike[]
   tabs?: Array<{ fields: FieldLike[] }>
@@ -96,4 +98,3 @@ export const dynamicValuePlugin = (pluginOptions: PluginOptions) => (config: any
   return nextConfig
 }
 
-export { DynamicValueRichText } from './exports/react.js'

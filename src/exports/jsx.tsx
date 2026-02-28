@@ -3,6 +3,7 @@ import type { JSXConverters } from '@payloadcms/richtext-lexical/react'
 import React from 'react'
 
 import type { SerializedDynamicValueNode } from '../nodes/DynamicValueNode/index.js'
+
 import {
   DYNAMIC_VALUE_NODE_TYPE,
   LEGACY_DYNAMIC_VALUE_NODE_TYPE,
@@ -10,7 +11,11 @@ import {
 
 const renderDynamicValueLabel = (node: SerializedDynamicValueNode) => {
   return (
-    <span data-payload-dynamic-field={node.field} data-payload-dynamic-value="true" key={node.field}>
+    <span
+      data-payload-dynamic-field={node.field}
+      data-payload-dynamic-value="true"
+      key={node.field}
+    >
       {node.label}
     </span>
   )
@@ -30,10 +35,7 @@ export const DynamicValueJSXConverters: JSXConverters = {
   [LEGACY_DYNAMIC_VALUE_NODE_TYPE]: dynamicValueJSXConverter,
 }
 
-
-export const withDynamicValueJSXConverters = (
-  converters?: JSXConverters,
-): JSXConverters => ({
+export const withDynamicValueJSXConverters = (converters?: JSXConverters): JSXConverters => ({
   ...(converters || {}),
   ...DynamicValueJSXConverters,
 })

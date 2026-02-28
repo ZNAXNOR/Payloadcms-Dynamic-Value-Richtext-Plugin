@@ -3,8 +3,8 @@ import type { Field } from 'payload'
 import { createNode, createServerFeature } from '@payloadcms/richtext-lexical'
 
 import {
-  DynamicValueNode,
   DYNAMIC_VALUE_NODE_TYPE,
+  DynamicValueNode,
   LEGACY_DYNAMIC_VALUE_NODE_TYPE,
 } from '../../nodes/DynamicValueNode/index.js'
 
