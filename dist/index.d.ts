@@ -1,3 +1,5 @@
+import { DynamicValueFeature } from './features/DynamicValue/feature.server.js';
 export { DynamicValueFeature } from './features/DynamicValue/feature.server.js';
 export { DynamicValueNode } from './nodes/DynamicValueNode/index.js';
-export declare const dynamicValuePlugin: (pluginOptions: any) => (config: any) => any;
+type PluginOptions = Parameters<typeof DynamicValueFeature>[0];
+export declare const dynamicValuePlugin: (pluginOptions: PluginOptions) => (config: any) => any;

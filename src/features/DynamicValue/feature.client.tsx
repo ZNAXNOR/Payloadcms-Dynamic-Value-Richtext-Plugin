@@ -1,6 +1,5 @@
 'use client'
 
-console.log('[DynamicValueFeature] feature.client.tsx loaded')
 
 import { createClientFeature } from '@payloadcms/richtext-lexical/client'
 import {
@@ -263,10 +262,6 @@ const DropdownItemComponent = ({ editor, field, item, trigger }: any) => {
 }
 
 export const DynamicValueFeatureClient = createClientFeature((args: any) => {
-  console.log('[DynamicValueFeature] Initializing Client Feature', {
-    args,
-    nodesFound: Boolean(DynamicValueNode),
-  })
   const props = args?.clientFeatureProps || args?.props || {}
   const options = props?.options || []
   const trigger = props?.trigger || '@'
@@ -280,14 +275,9 @@ export const DynamicValueFeatureClient = createClientFeature((args: any) => {
     key: `dv-item-${field.value}`,
     label: field.label,
     onSelect: ({ editor }: any) => {
-      console.log('[DynamicValueFeature] Toolbar Select:', field.value)
       editor.update(() => {
-        try {
-          const node = $createDynamicValueNode(field.value, field.label)
-          $insertNodes([node, $createTextNode(' ')])
-        } catch (e) {
-          console.error('[DynamicValueFeature] Insertion failed:', e)
-        }
+        const node = $createDynamicValueNode(field.value, field.label)
+        $insertNodes([node, $createTextNode(' ')])
       })
     },
     order: 1,

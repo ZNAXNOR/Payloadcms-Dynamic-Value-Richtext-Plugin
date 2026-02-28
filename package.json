@@ -25,6 +25,16 @@
       "import": "./dist/exports/jsx.js",
       "types": "./dist/exports/jsx.d.ts",
       "default": "./dist/exports/jsx.js"
+    },
+    "./rsc": {
+      "import": "./dist/exports/rsc.js",
+      "types": "./dist/exports/rsc.d.ts",
+      "default": "./dist/exports/rsc.js"
+    },
+    "./react": {
+      "import": "./dist/exports/react.js",
+      "types": "./dist/exports/react.d.ts",
+      "default": "./dist/exports/react.js"
     }
   },
   "main": "./dist/index.js",
@@ -113,6 +123,16 @@
         "import": "./dist/exports/jsx.js",
         "types": "./dist/exports/jsx.d.ts",
         "default": "./dist/exports/jsx.js"
+      },
+      "./rsc": {
+        "import": "./dist/exports/rsc.js",
+        "types": "./dist/exports/rsc.d.ts",
+        "default": "./dist/exports/rsc.js"
+      },
+      "./react": {
+        "import": "./dist/exports/react.js",
+        "types": "./dist/exports/react.d.ts",
+        "default": "./dist/exports/react.js"
       }
     },
     "main": "./dist/index.js",
