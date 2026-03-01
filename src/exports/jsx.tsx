@@ -109,13 +109,12 @@ const tokenStyle = (node: SerializedDynamicValueNode): React.CSSProperties => {
     borderRadius: '4px',
     boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
     color: 'var(--theme-text)',
-    cursor: 'pointer',
     display: 'inline-flex',
     fontFamily: 'var(--font-mono, monospace)',
     fontSize: '0.85em',
     margin: '0 2px',
     minHeight: '1.6em',
-    padding: iconTypes.length ? `1px 6px 1px ${iconBlockWidth + 8}px` : '1px 6px',
+    padding: iconTypes.length ? `1px 6px 1px ${iconBlockWidth + 12}px` : '1px 6px',
     userSelect: 'all',
     verticalAlign: 'middle',
     WebkitTextFillColor: 'var(--theme-text)',
@@ -129,37 +128,7 @@ const renderDynamicValueLabel = (node: SerializedDynamicValueNode) => {
       data-payload-dynamic-icons={getAppliedIconTypes(node).join(',')}
       data-payload-dynamic-value="true"
       key={node.field}
-      onKeyDown={(event) => {
-        if (event.key !== 'Enter' && event.key !== ' ') {
-          return
-        }
-
-        event.preventDefault()
-        const selection = window.getSelection()
-        if (!selection) {
-          return
-        }
-
-        const range = document.createRange()
-        range.selectNodeContents(event.currentTarget)
-        selection.removeAllRanges()
-        selection.addRange(range)
-      }}
-      onMouseDown={(event) => {
-        event.preventDefault()
-        const selection = window.getSelection()
-        if (!selection) {
-          return
-        }
-
-        const range = document.createRange()
-        range.selectNodeContents(event.currentTarget)
-        selection.removeAllRanges()
-        selection.addRange(range)
-      }}
-      role="button"
       style={tokenStyle(node)}
-      tabIndex={0}
     >
       {node.label}
     </span>
