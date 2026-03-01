@@ -3,14 +3,19 @@
 import { createClientFeature } from '@payloadcms/richtext-lexical/client'
 import {
   $createTextNode,
+  $getNearestNodeFromDOMNode,
+  $getSelection,
   $insertNodes,
+  $isRangeSelection,
+  CLICK_COMMAND,
+  COMMAND_PRIORITY_LOW,
   type LexicalNode,
 } from '@payloadcms/richtext-lexical/lexical'
 import { useLexicalComposerContext } from '@payloadcms/richtext-lexical/lexical/react/LexicalComposerContext'
 import { LexicalTypeaheadMenuPlugin } from '@payloadcms/richtext-lexical/lexical/react/LexicalTypeaheadMenuPlugin'
 import { useForm } from '@payloadcms/ui'
 import { AtSign, Hash, Variable } from 'lucide-react'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import * as ReactDOM from 'react-dom'
 
 import { $createDynamicValueNode, DynamicValueNode } from '../../nodes/DynamicValueNode/index.js'
@@ -78,6 +83,27 @@ const DynamicValuePlugin = ({
   const [queryString, setQueryString] = useState<null | string>(null)
   const checkForTriggerMatch = useTriggerMatch(trigger)
 
+  useEffect(() => {
+    return editor.registerCommand(
+      CLICK_COMMAND,
+      (event: MouseEvent) => {
+        const target = event.target as HTMLElement
+        const nodeElement = target.closest('.payload-dynamic-value-node')
+        if (nodeElement) {
+          editor.update(() => {
+            const node = $getNearestNodeFromDOMNode(nodeElement)
+            if ($isDynamicValueNode(node)) {
+              node.select(0, node.getTextContentSize())
+            }
+          })
+          return true
+        }
+        return false
+      },
+      COMMAND_PRIORITY_LOW,
+    )
+  }, [editor])
+
   const options = useMemo(() => {
     const searchString = queryString?.toLowerCase() || ''
     return (allOptions || [])
@@ -99,108 +125,117 @@ const DynamicValuePlugin = ({
   const IconToUse = trigger === '@' ? AtSign : trigger === '#' ? Hash : Variable
 
   return (
-    <LexicalTypeaheadMenuPlugin
-      {...({
-        anchorElem: anchorElem || (typeof document !== 'undefined' ? document.body : undefined),
-      } as any)}
-      menuRenderFn={(
-        anchorElementRef,
-        { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
-      ) => {
-        const anchor =
-          anchorElementRef?.current ||
-          anchorElem ||
-          (typeof document !== 'undefined' ? document.body : null)
-        if (!anchor || !options.length) {
-          return null
-        }
-
-        return ReactDOM.createPortal(
-          <div
-            className="slash-menu-popup"
-            style={{
-              maxHeight: '400px',
-              minWidth: '260px',
-              overflowY: 'auto',
-              padding: '8px',
-            }}
-          >
-            <div className="slash-menu-popup__group">
-              <div className="slash-menu-popup__group-title">Dynamic Values</div>
-              {options.map((option, index) => {
-                const isSelected = selectedIndex === index
-                return (
-                  <button
-                    aria-selected={isSelected}
-                    className={`slash-menu-popup__item ${isSelected ? 'slash-menu-popup__item--selected' : ''}`}
-                    key={option.value}
-                    onClick={() => selectOptionAndCleanUp(option)}
-                    onMouseEnter={() => setHighlightedIndex(index)}
-                    role="option"
-                    style={{ minHeight: '50px' }}
-                    tabIndex={-1}
-                    type="button"
-                  >
-                    <IconToUse
-                      className="icon"
-                      size={20}
-                      strokeWidth={1.5}
-                      style={{ flexShrink: 0 }}
-                    />
-                    <span
-                      className="slash-menu-popup__item-text"
-                      style={{
-                        alignItems: 'flex-start',
-                        display: 'flex',
-                        flex: '1',
-                        flexDirection: 'column',
-                        marginLeft: '8px',
-                      }}
-                    >
-                      <span
-                        className="text"
-                        style={{
-                          fontSize: '13px',
-                          fontWeight: '500',
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {option.label}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '11px',
-                          lineHeight: 1.2,
-                          marginTop: '2px',
-                          opacity: 0.5,
-                        }}
-                      >
-                        {option.value}
-                      </span>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>,
-          anchor,
-        )
-      }}
-      onQueryChange={setQueryString}
-      onSelectOption={(option: any, textNodeToReplace, closeMenu) => {
-        editor.update(() => {
-          if (textNodeToReplace) {
-            textNodeToReplace.remove()
+    <>
+      <LexicalTypeaheadMenuPlugin
+        {...({
+          anchorElem: anchorElem || (typeof document !== 'undefined' ? document.body : undefined),
+        } as any)}
+        menuRenderFn={(
+          anchorElementRef,
+          { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
+        ) => {
+          const anchor =
+            anchorElementRef?.current ||
+            anchorElem ||
+            (typeof document !== 'undefined' ? document.body : null)
+          if (!anchor || !options.length) {
+            return null
           }
-          const node = $createDynamicValueNode(option.value, option.label)
-          $insertNodes([node, $createTextNode(' ')])
-          closeMenu()
-        })
-      }}
-      options={options as any}
-      triggerFn={checkForTriggerMatch as any}
-    />
+
+          return ReactDOM.createPortal(
+            <div
+              className="slash-menu-popup"
+              style={{
+                maxHeight: '400px',
+                minWidth: '260px',
+                overflowY: 'auto',
+                padding: '8px',
+              }}
+            >
+              <div className="slash-menu-popup__group">
+                <div className="slash-menu-popup__group-title">Dynamic Values</div>
+                {options.map((option, index) => {
+                  const isSelected = selectedIndex === index
+                  return (
+                    <button
+                      aria-selected={isSelected}
+                      className={`slash-menu-popup__item ${isSelected ? 'slash-menu-popup__item--selected' : ''}`}
+                      key={option.value}
+                      onClick={() => selectOptionAndCleanUp(option)}
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                      role="option"
+                      style={{ minHeight: '50px' }}
+                      tabIndex={-1}
+                      type="button"
+                    >
+                      <IconToUse
+                        className="icon"
+                        size={20}
+                        strokeWidth={1.5}
+                        style={{ flexShrink: 0 }}
+                      />
+                      <span
+                        className="slash-menu-popup__item-text"
+                        style={{
+                          alignItems: 'flex-start',
+                          display: 'flex',
+                          flex: '1',
+                          flexDirection: 'column',
+                          marginLeft: '8px',
+                        }}
+                      >
+                        <span
+                          className="text"
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {option.label}
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '11px',
+                            lineHeight: 1.2,
+                            marginTop: '2px',
+                            opacity: 0.5,
+                          }}
+                        >
+                          {option.value}
+                        </span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>,
+            anchor,
+          )
+        }}
+        onQueryChange={setQueryString}
+        onSelectOption={(option: any, textNodeToReplace, closeMenu) => {
+          editor.update(() => {
+            if (textNodeToReplace) {
+              textNodeToReplace.remove()
+            }
+            const selection = $getSelection()
+            let format = 0
+            if ($isRangeSelection(selection)) {
+              format = selection.format
+            }
+
+            const node = $createDynamicValueNode(option.value, option.label)
+            node.setFormat(format)
+            $insertNodes([node, $createTextNode(' ')])
+            closeMenu()
+          })
+        }}
+        options={options as any}
+        triggerFn={checkForTriggerMatch as any}
+      />
+    </>
   )
 }
 
@@ -278,7 +313,14 @@ export const DynamicValueFeatureClient = createClientFeature((args: any) => {
     label: field.label,
     onSelect: ({ editor }: any) => {
       editor.update(() => {
+        const selection = $getSelection()
+        let format = 0
+        if ($isRangeSelection(selection)) {
+          format = selection.format
+        }
+
         const node = $createDynamicValueNode(field.value, field.label)
+        node.setFormat(format)
         $insertNodes([node, $createTextNode(' ')])
       })
     },
@@ -298,7 +340,15 @@ export const DynamicValueFeatureClient = createClientFeature((args: any) => {
     plugins: [
       {
         Component: (pluginProps) => (
-          <DynamicValuePlugin {...pluginProps} options={options} trigger={trigger} />
+          <>
+            <style
+              dangerouslySetInnerHTML={{
+                __html:
+                  '.payload-dynamic-value-node::selection { background-color: transparent; color: inherit; }',
+              }}
+            />
+            <DynamicValuePlugin {...pluginProps} options={options} trigger={trigger} />
+          </>
         ),
         position: 'floatingAnchorElem',
       },

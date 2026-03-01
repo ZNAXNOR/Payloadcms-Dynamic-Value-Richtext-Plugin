@@ -35,7 +35,8 @@ const flattenFields = (fields: Field[], options: DynamicValueOption[], prefix = 
       !blockedFieldTypes.has(field.type) &&
       nextPrefix
     ) {
-      const fieldLabel = 'label' in field && typeof field.label === 'string' ? field.label : fieldName
+      const fieldLabel =
+        'label' in field && typeof field.label === 'string' ? field.label : fieldName
 
       options.push({
         label: fieldLabel,
@@ -125,11 +126,32 @@ export const DynamicValueFeature = createServerFeature<
         createNode({
           converters: {
             html: {
-              converter: ({ node }: { node: { field?: string; label?: string; value?: string } }) => {
+              converter: ({
+                node,
+              }: {
+                node: { field?: string; format?: number; label?: string; value?: string }
+              }) => {
                 const field = node.field || node.value || ''
                 const label = node.label || field
+                const format = node.format || 0
 
-                return `<span data-payload-dynamic-value="true" data-payload-dynamic-field="${field}">${label}</span>`
+                const styles: string[] = []
+                if (format & 1) {
+                  styles.push('font-weight: bold')
+                }
+                if (format & 2) {
+                  styles.push('font-style: italic')
+                }
+                const decoration = [format & 8 ? 'underline' : '', format & 4 ? 'line-through' : '']
+                  .filter(Boolean)
+                  .join(' ')
+                if (decoration) {
+                  styles.push(`text-decoration: ${decoration}`)
+                }
+
+                const styleAttr = styles.length > 0 ? ` style="${styles.join('; ')}"` : ''
+
+                return `<span data-payload-dynamic-value="true" data-payload-dynamic-field="${field}" data-payload-dynamic-format="${format}"${styleAttr}>${label}</span>`
               },
               nodeTypes: [DYNAMIC_VALUE_NODE_TYPE, LEGACY_DYNAMIC_VALUE_NODE_TYPE],
             },

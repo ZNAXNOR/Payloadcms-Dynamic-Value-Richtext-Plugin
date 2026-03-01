@@ -9,12 +9,33 @@ import {
   LEGACY_DYNAMIC_VALUE_NODE_TYPE,
 } from '../nodes/DynamicValueNode/index.js'
 
+const getFormatStyles = (format: number): React.CSSProperties => {
+  const styles: React.CSSProperties = {}
+  if (format & 1) {
+    styles.fontWeight = 'bold'
+  } // Bold
+  if (format & 2) {
+    styles.fontStyle = 'italic'
+  } // Italic
+  const decoration = [
+    format & 8 ? 'underline' : '', // Underline
+    format & 4 ? 'line-through' : '', // Strikethrough
+  ]
+    .filter(Boolean)
+    .join(' ')
+  if (decoration) {
+    styles.textDecoration = decoration
+  }
+  return styles
+}
+
 const renderDynamicValueLabel = (node: SerializedDynamicValueNode) => {
   return (
     <span
       data-payload-dynamic-field={node.field}
       data-payload-dynamic-value="true"
       key={node.field}
+      style={getFormatStyles(node.format)}
     >
       {node.label}
     </span>
@@ -62,8 +83,11 @@ export function createDynamicValueJSXConverters(options: {
           data-payload-dynamic-field={dynamicNode.field}
           data-payload-dynamic-value="true"
           key={dynamicNode.field}
+          style={getFormatStyles(dynamicNode.format)}
         >
-          {String(resolvedValue)}
+          {typeof resolvedValue === 'object' && resolvedValue !== null
+            ? JSON.stringify(resolvedValue)
+            : String(resolvedValue)}
         </span>
       )
     }

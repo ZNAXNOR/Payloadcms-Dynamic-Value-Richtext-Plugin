@@ -1,18 +1,86 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { $applyNodeReplacement, DecoratorNode } from '@payloadcms/richtext-lexical/lexical';
-import React from 'react';
+import { $applyNodeReplacement, TextNode } from '@payloadcms/richtext-lexical/lexical';
 export const DYNAMIC_VALUE_NODE_TYPE = 'dynamic-value';
 export const LEGACY_DYNAMIC_VALUE_NODE_TYPE = 'dynamicValue';
-export class DynamicValueNode extends DecoratorNode {
+const iconSVGByType = {
+    bold: `<svg aria-hidden="true" class="icon" fill="none" focusable="false" height="14" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12a4 4 0 0 0 0-8H6v8"/><path d="M15 20a4 4 0 0 0 0-8H6v8h9Z"/></svg>`,
+    default: `<svg aria-hidden="true" class="icon" fill="none" focusable="false" height="14" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21s-4-3-4-9 4-9 4-9"/><path d="M16 3s4 3 4 9-4 9-4 9"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>`,
+    italic: `<svg aria-hidden="true" class="icon" fill="none" focusable="false" height="14" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>`,
+    link: `<svg aria-hidden="true" class="icon" fill="none" focusable="false" height="14" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+    strikethrough: `<svg aria-hidden="true" class="icon" fill="none" focusable="false" height="14" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" x2="20" y1="12" y2="12"/></svg>`,
+    underline: `<svg aria-hidden="true" class="icon" fill="none" focusable="false" height="14" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>`
+};
+const getIconsForNode = (node)=>{
+    const icons = [];
+    const parent = node.getParent();
+    if (parent?.getType() === 'link') {
+        icons.push('link');
+    }
+    if (node.hasFormat('bold')) {
+        icons.push('bold');
+    }
+    if (node.hasFormat('italic')) {
+        icons.push('italic');
+    }
+    if (node.hasFormat('underline')) {
+        icons.push('underline');
+    }
+    if (node.hasFormat('strikethrough')) {
+        icons.push('strikethrough');
+    }
+    if (icons.length === 0) {
+        icons.push('default');
+    }
+    return icons;
+};
+const updateDOMAttributes = (node, dom)=>{
+    dom.classList.add('payload-dynamic-value-node');
+    dom.setAttribute('data-payload-dynamic-value', 'true');
+    dom.setAttribute('data-payload-dynamic-field', node.__field);
+    dom.setAttribute('data-payload-dynamic-icons', getIconsForNode(node).join(','));
+    dom.setAttribute('contenteditable', 'false');
+    dom.style.alignItems = 'center';
+    dom.style.backgroundColor = 'var(--theme-elevation-100)';
+    dom.style.border = '1px solid var(--theme-elevation-250)';
+    dom.style.borderRadius = '6px';
+    dom.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+    dom.style.cursor = 'pointer';
+    dom.style.display = 'inline-flex';
+    dom.style.fontFamily = 'inherit';
+    dom.style.fontSize = '0.95em';
+    dom.style.fontWeight = node.hasFormat('bold') ? 'bold' : 'normal';
+    dom.style.fontStyle = node.hasFormat('italic') ? 'italic' : 'normal';
+    dom.style.margin = '0 1px';
+    dom.style.padding = '2px 8px';
+    dom.style.textDecoration = [
+        node.hasFormat('underline') ? 'underline' : '',
+        node.hasFormat('strikethrough') ? 'line-through' : ''
+    ].filter(Boolean).join(' ');
+    dom.style.transition = 'all 0.1s ease';
+    dom.style.userSelect = 'all';
+    dom.style.verticalAlign = 'baseline';
+    let iconContainer = dom.querySelector('.payload-dynamic-value-node__icons');
+    if (!iconContainer) {
+        iconContainer = document.createElement('span');
+        iconContainer.className = 'payload-dynamic-value-node__icons';
+        iconContainer.setAttribute('contenteditable', 'false');
+        iconContainer.style.alignItems = 'center';
+        iconContainer.style.color = 'var(--theme-elevation-600)';
+        iconContainer.style.display = 'inline-flex';
+        iconContainer.style.gap = '2px';
+        iconContainer.style.marginRight = '6px';
+        iconContainer.style.pointerEvents = 'none';
+        dom.prepend(iconContainer);
+    }
+    iconContainer.innerHTML = getIconsForNode(node).map((iconType)=>iconSVGByType[iconType]).join('');
+};
+export class DynamicValueNode extends TextNode {
     __field;
-    __label;
-    constructor(field, label, key){
-        super(key);
+    constructor(field, text, key){
+        super(text, key);
         this.__field = field;
-        this.__label = label ?? field;
     }
     static clone(node) {
-        return new DynamicValueNode(node.__field, node.__label, node.getKey());
+        return new DynamicValueNode(node.__field, node.__text, node.__key);
     }
     static getType() {
         return DYNAMIC_VALUE_NODE_TYPE;
@@ -20,103 +88,91 @@ export class DynamicValueNode extends DecoratorNode {
     static importDOM() {
         return {
             span: (domNode)=>{
-                if (!domNode.hasAttribute('data-payload-dynamic-value')) {
-                    return null;
+                if (domNode instanceof HTMLSpanElement && domNode.hasAttribute('data-payload-dynamic-value')) {
+                    return {
+                        conversion: convertDynamicValueElement,
+                        priority: 2
+                    };
                 }
-                return {
-                    conversion: (el)=>{
-                        const field = el.getAttribute('data-payload-dynamic-field');
-                        const label = el.textContent || undefined;
-                        return {
-                            node: field ? $createDynamicValueNode(field, label) : null
-                        };
-                    },
-                    priority: 1
-                };
+                return null;
             }
         };
     }
     static importJSON(serializedNode) {
-        return $createDynamicValueNode(serializedNode.field, serializedNode.label);
+        const node = $createDynamicValueNode(serializedNode.field, serializedNode.label || serializedNode.text);
+        node.setFormat(serializedNode.format);
+        node.setDetail(serializedNode.detail);
+        node.setMode(serializedNode.mode);
+        node.setStyle(serializedNode.style);
+        return node;
     }
-    createDOM() {
-        const span = document.createElement('span');
-        span.style.display = 'inline-block';
-        span.className = 'payload-dynamic-value-node';
-        return span;
-    }
-    decorate() {
-        return /*#__PURE__*/ _jsxs("span", {
-            contentEditable: false,
-            style: {
-                alignItems: 'center',
-                backgroundColor: 'var(--theme-elevation-150)',
-                border: '1px solid var(--theme-elevation-300)',
-                borderRadius: '4px',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                color: 'var(--theme-text)',
-                cursor: 'default',
-                display: 'inline-flex',
-                fontFamily: 'var(--font-mono, monospace)',
-                fontSize: '0.85em',
-                fontWeight: 600,
-                margin: '0 2px',
-                padding: '1px 6px',
-                userSelect: 'none',
-                verticalAlign: 'middle'
-            },
-            children: [
-                /*#__PURE__*/ _jsx("span", {
-                    style: {
-                        color: 'var(--theme-primary)',
-                        fontSize: '0.8em',
-                        marginRight: '4px',
-                        opacity: 0.4
-                    },
-                    children: "VAR"
-                }),
-                this.__label
-            ]
-        });
+    createDOM(config) {
+        const dom = super.createDOM(config);
+        updateDOMAttributes(this, dom);
+        return dom;
     }
     exportDOM() {
         const element = document.createElement('span');
         element.setAttribute('data-payload-dynamic-value', 'true');
         element.setAttribute('data-payload-dynamic-field', this.__field);
-        element.textContent = this.__label;
+        element.setAttribute('data-payload-dynamic-format', String(this.getFormat()));
+        element.textContent = this.getTextContent();
+        // Apply inline styles for non-CSS environments
+        if (this.hasFormat('bold')) {
+            element.style.fontWeight = 'bold';
+        }
+        if (this.hasFormat('italic')) {
+            element.style.fontStyle = 'italic';
+        }
+        const decoration = [
+            this.hasFormat('underline') ? 'underline' : '',
+            this.hasFormat('strikethrough') ? 'line-through' : ''
+        ].filter(Boolean).join(' ');
+        if (decoration) {
+            element.style.textDecoration = decoration;
+        }
         return {
             element
         };
     }
     exportJSON() {
         return {
+            ...super.exportJSON(),
             type: DYNAMIC_VALUE_NODE_TYPE,
             field: this.__field,
-            label: this.__label,
+            label: this.getTextContent(),
             version: 1
         };
     }
     getField() {
         return this.__field;
     }
-    getTextContent() {
-        return this.__label;
-    }
-    isInline() {
+    isTextEntity() {
         return true;
     }
-    isToken() {
-        return true;
-    }
-    updateDOM() {
-        return false;
+    updateDOM(prevNode, dom, config) {
+        const isUpdated = super.updateDOM(prevNode, dom, config);
+        if (prevNode.__field !== this.__field || prevNode.getFormat() !== this.getFormat() || prevNode.getParent() !== this.getParent()) {
+            updateDOMAttributes(this, dom);
+        }
+        return isUpdated;
     }
 }
-export function $createDynamicValueNode(field, label) {
-    return $applyNodeReplacement(new DynamicValueNode(field, label));
+function convertDynamicValueElement(domNode) {
+    const span = domNode;
+    const field = span.getAttribute('data-payload-dynamic-field') || span.textContent || '';
+    const node = $createDynamicValueNode(field, span.textContent || field);
+    return {
+        node
+    };
+}
+export function $createDynamicValueNode(field, text) {
+    const node = new DynamicValueNode(field, text || field);
+    node.setMode('token');
+    return $applyNodeReplacement(node);
 }
 export function $isDynamicValueNode(node) {
-    return typeof node === 'object' && node !== null && 'getType' in node && typeof node.getType === 'function' && node.getType() === DYNAMIC_VALUE_NODE_TYPE;
+    return node?.getType() === DYNAMIC_VALUE_NODE_TYPE;
 }
 
 //# sourceMappingURL=index.js.map

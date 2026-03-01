@@ -84,7 +84,23 @@ export const DynamicValueFeature = createServerFeature({
                             converter: ({ node })=>{
                                 const field = node.field || node.value || '';
                                 const label = node.label || field;
-                                return `<span data-payload-dynamic-value="true" data-payload-dynamic-field="${field}">${label}</span>`;
+                                const format = node.format || 0;
+                                const styles = [];
+                                if (format & 1) {
+                                    styles.push('font-weight: bold');
+                                }
+                                if (format & 2) {
+                                    styles.push('font-style: italic');
+                                }
+                                const decoration = [
+                                    format & 8 ? 'underline' : '',
+                                    format & 4 ? 'line-through' : ''
+                                ].filter(Boolean).join(' ');
+                                if (decoration) {
+                                    styles.push(`text-decoration: ${decoration}`);
+                                }
+                                const styleAttr = styles.length > 0 ? ` style="${styles.join('; ')}"` : '';
+                                return `<span data-payload-dynamic-value="true" data-payload-dynamic-field="${field}" data-payload-dynamic-format="${format}"${styleAttr}>${label}</span>`;
                             },
                             nodeTypes: [
                                 DYNAMIC_VALUE_NODE_TYPE,
