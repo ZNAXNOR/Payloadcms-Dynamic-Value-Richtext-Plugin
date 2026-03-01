@@ -9,12 +9,37 @@ import {
   LEGACY_DYNAMIC_VALUE_NODE_TYPE,
 } from '../nodes/DynamicValueNode/index.js'
 
+const TEXT_FORMAT = {
+  bold: 1,
+  italic: 2,
+  strikethrough: 4,
+  underline: 8,
+} as const
+
+const tokenTextStyle = (node: SerializedDynamicValueNode): React.CSSProperties => {
+  const format = typeof node.format === 'number' ? node.format : 0
+
+  const textDecoration = [
+    format & TEXT_FORMAT.underline ? 'underline' : '',
+    format & TEXT_FORMAT.strikethrough ? 'line-through' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  return {
+    fontStyle: format & TEXT_FORMAT.italic ? 'italic' : undefined,
+    fontWeight: format & TEXT_FORMAT.bold ? 700 : undefined,
+    textDecoration: textDecoration || undefined,
+  }
+}
+
 const renderDynamicValueLabel = (node: SerializedDynamicValueNode) => {
   return (
     <span
       data-payload-dynamic-field={node.field}
       data-payload-dynamic-value="true"
       key={node.field}
+      style={tokenTextStyle(node)}
     >
       {node.label}
     </span>
