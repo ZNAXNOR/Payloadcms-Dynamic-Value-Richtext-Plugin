@@ -3,7 +3,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 // Importing from the published package path mirrors how real consumers wire the plugin in their apps.
 import { dynamicValuePlugin, DynamicValueFeature } from '@od-labs/payloadcms-dynamic-value-richtext'
 import path from 'path'
-import { buildConfig, type CollectionConfig } from 'payload'
+import { buildConfig, type CollectionConfig, type GlobalConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
@@ -15,6 +15,27 @@ const dirname = path.dirname(filename)
 
 // Collection-level editor overrides keep this demo realistic by showing a per-collection
 // Lexical setup that still benefits from plugin-driven dynamic value injection.
+const Contacts: GlobalConfig = {
+  slug: 'contacts',
+  fields: [
+    {
+      name: 'companyName',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'email',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'phone',
+      type: 'text',
+      required: true,
+    },
+  ],
+}
+
 const Pages: CollectionConfig = {
   slug: 'pages',
   admin: {
@@ -27,9 +48,39 @@ const Pages: CollectionConfig = {
       required: true,
     },
     {
-      name: 'content',
+      type: 'tabs',
+      tabs: [
+        {
+          label: 'Meta',
+          fields: [
+            {
+              name: 'metaTitle',
+              type: 'text',
+            },
+            {
+              name: 'metaDescription',
+              type: 'text',
+            },
+            {
+              name: 'supportEmail',
+              type: 'text',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'body',
       type: 'richText',
-      editor: lexicalEditor({}),
+      editor: lexicalEditor({
+        features: ({ defaultFeatures }) => [
+          ...defaultFeatures,
+          DynamicValueFeature({
+            collections: ['pages'],
+            globals: ['contacts'],
+          }),
+        ],
+      }),
     },
   ],
 }
@@ -42,6 +93,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media, Pages],
+  globals: [Contacts],
   // Global Lexical feature injection provides a safe fallback so every rich-text field
   // includes dynamic values, even before collection-specific editor configs are expanded.
   editor: lexicalEditor({
@@ -62,7 +114,7 @@ export default buildConfig({
     // dynamic value behavior without repeating setup in every collection.
     dynamicValuePlugin({
       collections: ['pages', 'users'],
-      globals: [],
+      globals: ['contacts'],
       trigger: '#',
       fields: [
         {
