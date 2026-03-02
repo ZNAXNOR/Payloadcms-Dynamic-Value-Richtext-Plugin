@@ -3,107 +3,31 @@
 @import 'tailwindcss/utilities';
 
 @theme {
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-background: #000000;
-  --color-foreground: #ffffff;
-  --color-muted-foreground: rgba(255, 255, 255, 0.6);
-}
-
-:root {
-  --font-mono: 'Roboto Mono', monospace;
+  --color-brand: #e94235;
+  --brand-soft: #fff0ee;
+  --color-border: #e5e7eb;
+  --color-surface: #f8fafc;
+  --color-foreground: #0f172a;
+  --color-muted-foreground: #475569;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html {
-  font-size: 18px;
-  line-height: 32px;
-  background: rgb(0, 0, 0);
-  -webkit-font-smoothing: antialiased;
-}
-
 html,
-body,
-#app {
-  height: 100%;
+body {
+  min-height: 100%;
 }
 
 body {
-  font-family: system-ui;
-  font-size: 18px;
-  line-height: 32px;
   margin: 0;
-  color: rgb(255, 255, 255);
-}
-
-@media (max-width: 1024px) {
-  body {
-    font-size: 15px;
-    line-height: 24px;
-  }
-}
-
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-h1 {
-  margin: 40px 0;
-  font-size: 64px;
-  line-height: 70px;
-  font-weight: bold;
-}
-
-@media (max-width: 1024px) {
-  h1 {
-    margin: 24px 0;
-    font-size: 42px;
-    line-height: 42px;
-  }
-}
-
-@media (max-width: 768px) {
-  h1 {
-    font-size: 38px;
-    line-height: 38px;
-  }
-}
-
-@media (max-width: 400px) {
-  h1 {
-    font-size: 32px;
-    line-height: 32px;
-  }
-}
-
-p {
-  margin: 24px 0;
-}
-
-@media (max-width: 1024px) {
-  p {
-    margin: calc(var(--base, 1rem) * 0.75) 0;
-  }
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 }
 
 a {
-  color: currentColor;
-}
-
-a:focus {
-  opacity: 0.8;
-  outline: none;
-}
-
-a:active {
-  opacity: 0.7;
-  outline: none;
-}
-
-svg {
-  vertical-align: middle;
+  color: inherit;
+  text-decoration: none;
 }

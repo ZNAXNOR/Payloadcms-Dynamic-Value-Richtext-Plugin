@@ -4,6 +4,7 @@ import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
+import { dynamicValuePlugin } from '@od-labs/payloadcms-dynamic-value-richtext'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -22,6 +23,13 @@ export default buildConfig({
   },
   collections: [Users, Media, Documents],
   globals: [Contacts],
+  plugins: [
+    dynamicValuePlugin({
+      collections: ['documents'],
+      globals: ['contacts'],
+      trigger: '@',
+    }),
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'demo-secret',
   typescript: {

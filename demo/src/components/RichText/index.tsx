@@ -5,11 +5,8 @@ import {
   SerializedLinkNode,
   type DefaultTypedEditorState,
 } from '@payloadcms/richtext-lexical'
-import {
-  JSXConvertersFunction,
-  LinkJSXConverter,
-  RichText as ConvertRichText,
-} from '@payloadcms/richtext-lexical/react'
+import { JSXConvertersFunction, LinkJSXConverter } from '@payloadcms/richtext-lexical/react'
+import { DynamicValueRichText } from '@od-labs/payloadcms-dynamic-value-richtext'
 
 import { CodeBlock, CodeBlockProps } from '@/blocks/Code/Component'
 
@@ -63,9 +60,9 @@ type Props = {
 } & React.HTMLAttributes<HTMLDivElement>
 
 export default function RichText(props: Props) {
-  const { className, enableProse = true, enableGutter = true, ...rest } = props
+  const { className, dynamicData, enableProse = true, enableGutter = true, ...rest } = props
   return (
-    <ConvertRichText
+    <DynamicValueRichText
       converters={jsxConverters}
       className={cn(
         'payload-richtext',
@@ -76,6 +73,7 @@ export default function RichText(props: Props) {
         },
         className,
       )}
+      payloadData={dynamicData}
       {...rest}
     />
   )
