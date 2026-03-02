@@ -1,13 +1,11 @@
 import { headers as getHeaders } from 'next/headers.js'
-import Image from 'next/image'
+import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
-import { fileURLToPath } from 'url'
 
 import config from '@/payload.config'
-import './styles.css'
 
-import Link from 'next/link'
+const BRAND = '#E94235'
 
 export default async function HomePage() {
   const headers = await getHeaders()
@@ -15,7 +13,6 @@ export default async function HomePage() {
   const payload = await getPayload({ config: payloadConfig })
   const { user } = await payload.auth({ headers })
 
-  // Show all published documents
   const { docs: documents } = await payload.find({
     collection: 'documents',
     where: {
@@ -26,78 +23,76 @@ export default async function HomePage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white bg-[radial-gradient(circle_at_20%_20%,_rgba(59,130,246,0.5)_0%,_transparent_40%),_radial-gradient(circle_at_80%_80%,_rgba(147,51,234,0.5)_0%,_transparent_40%)] bg-fixed">
-      <main className="max-w-[1000px] mx-auto px-8 py-32">
-        <div className="text-center mb-32">
-          <div className="inline-block bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-2 rounded-full font-extrabold text-[0.75rem] tracking-[2px] mb-6 shadow-[0_0_20px_rgba(59,130,246,0.4)]">
-            OD LABS
-          </div>
-          <h1 className="text-[4rem] font-extrabold leading-[1.1] mb-6 tracking-[-1px] md:text-[2.5rem]">
-            Payload CMS{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-purple-600 drop-shadow-[0_0_10px_rgba(59,130,246,0.3)] [-webkit-text-stroke:1px_rgba(255,255,255,0.5)]">
-              Dynamic Value
-            </span>{' '}
-            Richtext Plugin
+    <div className="min-h-screen bg-[var(--color-surface)] text-foreground">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(233,66,53,0.16),_transparent_55%)]" />
+      <main className="mx-auto max-w-6xl px-6 py-16 md:px-10 md:py-24">
+        <section className="rounded-3xl border border-[var(--color-border)] bg-white p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] md:p-14">
+          <p className="mb-4 inline-flex rounded-full bg-[var(--brand-soft)] px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-brand)]">
+            OD Labs Plugin Demo
+          </p>
+          <h1 className="mb-5 text-4xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-6xl">
+            Dynamic values for Payload Lexical, ready for production.
           </h1>
-          <p className="text-xl opacity-70 max-w-[600px] mx-auto mb-12">
-            Experience the power of dynamic variables within your rich text editor.
+          <p className="max-w-3xl text-lg leading-relaxed text-slate-600 md:text-xl">
+            This demo is now wired to the official dynamic value plugin flow. Add reusable tokens
+            like <span className="font-semibold text-slate-800">@contacts.companyEmail</span> in
+            rich text and render them safely on the frontend.
           </p>
 
-          <div className="flex gap-4 justify-center">
+          <div className="mt-10 flex flex-wrap gap-4">
             <Link
-              className="bg-white text-black px-8 py-3.5 rounded-xl font-semibold transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(255,255,255,0.1)]"
+              className="rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5"
               href={payloadConfig.routes.admin}
+              style={{ backgroundColor: BRAND }}
             >
-              Manage Content
+              {user ? 'Open Admin' : 'Sign in to Admin'}
             </Link>
             <a
-              className="bg-white/5 border border-white/10 text-white px-8 py-3.5 rounded-xl font-semibold transition-all hover:bg-white/10"
+              className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
               href="https://github.com/OD-Labs/Payloadcms-Dynamic-Value-Richtext-Plugin"
               rel="noopener noreferrer"
               target="_blank"
             >
-              GitHub Repo
+              View Source
             </a>
           </div>
-        </div>
+        </section>
 
-        <section className="mt-16">
-          <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
-            <h2 className="text-2xl font-bold">Published Documents</h2>
-            <div className="bg-white/10 px-3 py-1 rounded-full text-[0.875rem] opacity-60">
-              {documents.length} Found
-            </div>
+        <section className="mt-14">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Published documents</h2>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-600">
+              {documents.length} total
+            </span>
           </div>
 
           {documents.length > 0 ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+            <div className="grid gap-4 md:grid-cols-2">
               {documents.map((doc) => (
                 <Link
                   key={doc.id}
                   href={`/${doc.slug}`}
-                  className="group bg-white/[0.03] border border-white/[0.05] p-6 rounded-[1.25rem] flex justify-between items-center transition-all duration-300 hover:bg-blue-500/10 hover:border-blue-500/30 hover:scale-[1.02] backdrop-blur-sm"
+                  className="group rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-[var(--color-brand)] hover:shadow-[0_10px_35px_rgba(233,66,53,0.15)]"
                 >
-                  <div className="">
-                    <h3 className="font-semibold mb-1 text-white">{doc.title}</h3>
-                    <code className="text-[0.8rem] opacity-50">/{doc.slug}</code>
-                  </div>
-                  <div className="opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">
-                    →
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">{doc.title}</h3>
+                      <p className="mt-1 text-sm text-slate-500">/{doc.slug}</p>
+                    </div>
+                    <span className="text-slate-300 transition group-hover:text-[var(--color-brand)]">
+                      →
+                    </span>
                   </div>
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 bg-white/[0.03] rounded-[1.25rem] border border-dashed border-white/10 opacity-50">
-              <p>No published documents found. Start by creating one in the admin panel!</p>
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-slate-500">
+              No published documents yet. Create one in the admin to see it here.
             </div>
           )}
         </section>
       </main>
-
-      <footer className="text-center py-16 px-8 opacity-30 text-[0.875rem]">
-        <p>Built with ❤️ by OD LABS</p>
-      </footer>
     </div>
   )
 }

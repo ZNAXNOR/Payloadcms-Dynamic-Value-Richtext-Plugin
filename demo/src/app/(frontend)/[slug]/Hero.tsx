@@ -19,8 +19,8 @@ export const Hero: React.FC<Props> = ({ title, description, lastUpdated }) => {
     <section className="py-24 lg:py-32">
       <div className="container max-w-4xl mx-auto px-6">
         <div className="mb-8 flex items-center gap-4">
-          <div className="h-0.5 w-12 bg-blue-600"></div>
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-[0.2em]">
+          <div className="h-0.5 w-12 bg-[var(--color-brand)]"></div>
+          <span className="text-xs font-bold text-[var(--color-brand)] uppercase tracking-[0.2em]">
             Document
           </span>
         </div>

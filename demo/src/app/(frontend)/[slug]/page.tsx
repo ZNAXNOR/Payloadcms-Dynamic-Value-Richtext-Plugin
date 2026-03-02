@@ -1,8 +1,9 @@
 import { getPayload } from 'payload'
-import React, { Suspense } from 'react'
+import React from 'react'
 import config from '@/payload.config'
 import RichText from '@/components/RichText'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { draftMode } from 'next/headers'
 import { Hero } from './Hero'
 
@@ -36,9 +37,9 @@ export default async function DocumentPage({ params }: { params: Promise<{ slug:
   const doc = docs[0]
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-blue-500/30">
+    <div className="min-h-screen bg-background text-foreground selection:bg-[var(--color-brand)]/30">
       {draft && (
-        <div className="sticky top-0 z-100 bg-blue-600 text-white shadow-xl animate-in fade-in slide-in-from-top duration-500">
+        <div className="sticky top-0 z-100 bg-[var(--color-brand)] text-white shadow-xl animate-in fade-in slide-in-from-top duration-500">
           <div className="container max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="relative flex h-2 w-2">
@@ -49,12 +50,12 @@ export default async function DocumentPage({ params }: { params: Promise<{ slug:
                 Draft Mode Active
               </span>
             </div>
-            <a
+            <Link
               href="/next/exit-preview"
               className="bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-full text-xs font-bold transition-all border border-white/20 active:scale-95"
             >
               Exit Preview
-            </a>
+            </Link>
           </div>
         </div>
       )}
