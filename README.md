@@ -86,7 +86,7 @@ Use the plugin-provided wrapper component that injects converters for you:
 ```tsx
 import { DynamicValueRichText } from '@od-labs/payloadcms-dynamic-value-richtext/react'
 
-;<DynamicValueRichText data={page.content} payloadData={page} />
+<DynamicValueRichText data={page.content} payloadData={page} />
 ```
 
 ### Option B: manual converters
@@ -95,7 +95,7 @@ import { DynamicValueRichText } from '@od-labs/payloadcms-dynamic-value-richtext
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { DynamicValueJSXConverters } from '@od-labs/payloadcms-dynamic-value-richtext/jsx'
 
-;<RichText data={page.content} converters={DynamicValueJSXConverters} />
+<RichText data={page.content} converters={DynamicValueJSXConverters} />
 ```
 
 If you want to resolve the dynamic value from real document data at render time:
