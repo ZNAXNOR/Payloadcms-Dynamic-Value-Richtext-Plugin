@@ -115,7 +115,6 @@ export const DynamicValueFeature = createServerFeature<
     }
 
     return {
-      ClientFeature: '@od-labs/payloadcms-dynamic-value-richtext/client#DynamicValueFeatureClient',
       clientFeatureProps: {
         options,
         trigger,

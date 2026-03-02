@@ -1,37 +1,43 @@
 {
   "name": "@od-labs/payloadcms-dynamic-value-richtext",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Dynamic Value Rich Text Plugin for PayloadCMS",
   "license": "MIT",
   "author": "OD LABS",
   "type": "module",
   "exports": {
     ".": {
+      "development": "./src/index.ts",
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./client": {
+      "development": "./src/exports/client.ts",
       "import": "./dist/exports/client.js",
       "types": "./dist/exports/client.d.ts",
       "default": "./dist/exports/client.js"
     },
     "./server": {
+      "development": "./src/exports/server.ts",
       "import": "./dist/exports/server.js",
       "types": "./dist/exports/server.d.ts",
       "default": "./dist/exports/server.js"
     },
     "./jsx": {
+      "development": "./src/exports/jsx.ts",
       "import": "./dist/exports/jsx.js",
       "types": "./dist/exports/jsx.d.ts",
       "default": "./dist/exports/jsx.js"
     },
     "./rsc": {
+      "development": "./src/exports/rsc.ts",
       "import": "./dist/exports/rsc.js",
       "types": "./dist/exports/rsc.d.ts",
       "default": "./dist/exports/rsc.js"
     },
     "./react": {
+      "development": "./src/exports/react.ts",
       "import": "./dist/exports/react.js",
       "types": "./dist/exports/react.d.ts",
       "default": "./dist/exports/react.js"
@@ -48,7 +54,8 @@
     "build:types": "tsc --outDir dist --rootDir ./src",
     "clean": "rimraf {dist,*.tsbuildinfo}",
     "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
-    "dev": "next dev dev --turbo",
+    "dev": "pnpm --filter demo dev",
+    "dev:test": "next dev dev --turbo",
     "dev:generate-importmap": "pnpm dev:payload generate:importmap",
     "dev:generate-types": "pnpm dev:payload generate:types",
     "dev:payload": "cross-env PAYLOAD_CONFIG_PATH=./dev/payload.config.ts payload",
@@ -62,13 +69,11 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
-    "@payloadcms/db-mongodb": "3.37.0",
-    "@payloadcms/db-postgres": "3.37.0",
-    "@payloadcms/db-sqlite": "3.37.0",
-    "@payloadcms/eslint-config": "3.9.0",
-    "@payloadcms/next": "3.37.0",
-    "@payloadcms/richtext-lexical": "3.37.0",
-    "@payloadcms/ui": "3.37.0",
+    "@payloadcms/db-sqlite": "3.78.0",
+    "@payloadcms/eslint-config": "3.28.0",
+    "@payloadcms/next": "3.78.0",
+    "@payloadcms/richtext-lexical": "3.78.0",
+    "@payloadcms/ui": "3.78.0",
     "@playwright/test": "1.58.2",
     "@swc-node/register": "1.10.9",
     "@swc/cli": "0.6.0",
@@ -80,10 +85,9 @@
     "eslint": "^9.23.0",
     "eslint-config-next": "15.4.11",
     "graphql": "^16.8.1",
-    "mongodb-memory-server": "10.1.4",
     "next": "15.4.11",
     "open": "^10.1.0",
-    "payload": "3.37.0",
+    "payload": "3.78.0",
     "prettier": "^3.4.2",
     "qs-esm": "7.0.2",
     "react": "19.2.1",
@@ -96,7 +100,7 @@
     "vitest": "4.0.18"
   },
   "peerDependencies": {
-    "payload": "^3.37.0"
+    "payload": "3.78.0"
   },
   "engines": {
     "node": "^18.20.2 || >=20.9.0",
@@ -147,6 +151,11 @@
   },
   "registry": "https://registry.npmjs.org/",
   "dependencies": {
-    "lucide-react": "^0.575.0"
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.575.0",
+    "prism-react-renderer": "^2.4.1",
+    "tailwind-merge": "^3.5.0"
   }
 }
