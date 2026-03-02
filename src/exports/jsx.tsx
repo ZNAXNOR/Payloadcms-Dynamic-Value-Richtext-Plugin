@@ -9,12 +9,37 @@ import {
   LEGACY_DYNAMIC_VALUE_NODE_TYPE,
 } from '../nodes/DynamicValueNode/index.js'
 
+const TEXT_FORMAT = {
+  bold: 1,
+  italic: 2,
+  strikethrough: 4,
+  underline: 8,
+} as const
+
+const tokenTextStyle = (node: SerializedDynamicValueNode): React.CSSProperties => {
+  const format = typeof node.format === 'number' ? node.format : 0
+
+  const textDecoration = [
+    format & TEXT_FORMAT.underline ? 'underline' : '',
+    format & TEXT_FORMAT.strikethrough ? 'line-through' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  return {
+    fontStyle: format & TEXT_FORMAT.italic ? 'italic' : undefined,
+    fontWeight: format & TEXT_FORMAT.bold ? 700 : undefined,
+    textDecoration: textDecoration || undefined,
+  }
+}
+
 const renderDynamicValueLabel = (node: SerializedDynamicValueNode) => {
   return (
     <span
       data-payload-dynamic-field={node.field}
       data-payload-dynamic-value="true"
       key={node.field}
+      style={tokenTextStyle(node)}
     >
       {node.label}
     </span>
@@ -26,10 +51,6 @@ const dynamicValueJSXConverter = ({ node }: { node: unknown }) => {
   return renderDynamicValueLabel(dynamicNode)
 }
 
-/**
- * JSX converters for dynamic value nodes. Includes both the current node type and
- * the legacy type to keep older content working.
- */
 export const DynamicValueJSXConverters: JSXConverters = {
   [DYNAMIC_VALUE_NODE_TYPE]: dynamicValueJSXConverter,
   [LEGACY_DYNAMIC_VALUE_NODE_TYPE]: dynamicValueJSXConverter,
@@ -57,15 +78,17 @@ export function createDynamicValueJSXConverters(options: {
     }, data)
 
     if (resolvedValue !== undefined && resolvedValue !== null && resolvedValue !== '') {
-      return (
-        <span
-          data-payload-dynamic-field={dynamicNode.field}
-          data-payload-dynamic-value="true"
-          key={dynamicNode.field}
-        >
-          {String(resolvedValue)}
-        </span>
-      )
+      const label =
+        typeof resolvedValue === 'string'
+          ? resolvedValue
+          : typeof resolvedValue === 'number' || typeof resolvedValue === 'boolean'
+            ? String(resolvedValue)
+            : JSON.stringify(resolvedValue)
+
+      return renderDynamicValueLabel({
+        ...dynamicNode,
+        label: label || dynamicNode.label,
+      })
     }
 
     if (fallback) {
